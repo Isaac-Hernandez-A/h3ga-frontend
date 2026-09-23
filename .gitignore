@@ -1,0 +1,18 @@
+# Carpeta de desarrollo y compilación de Nuxt
+.nuxt
+.output
+.nitro
+.cache
+dist
+
+# Dependencias (se descargan con npm install)
+node_modules
+
+# Variables de entorno con claves secretas (¡No subir!)
+.env
+.env.*
+!.env.example
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
