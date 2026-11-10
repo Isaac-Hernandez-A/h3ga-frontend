@@ -6,8 +6,12 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       // Se sobrescribe con NUXT_PUBLIC_API_BASE. Solo la dirección de la API; sin secretos.
-      apiBase: 'http://localhost:3001',
+      apiBase: 'http://localhost:3001/api/v1',
     },
+  },
+  // Iconos locales: app/assets/icons/Nombre.svg -> icon="h3ga:Nombre"
+  icon: {
+    customCollections: [{ prefix: 'h3ga', dir: './app/assets/icons', normalizeIconName: false }],
   },
   app: {
     head: {

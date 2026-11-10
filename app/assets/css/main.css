@@ -1,2 +1,46 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
+
+@theme static {
+  /* Tipografías de la marca (@nuxt/fonts las descarga al detectar font-family). */
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+
+  /* Turquesa de la marca: es el color primario de Nuxt UI (app.config.ts). */
+  --color-marca-50: #f4fcfc;
+  --color-marca-100: #e4f7f9;
+  --color-marca-200: #caeff2;
+  --color-marca-300: #a7e5ea;
+  --color-marca-400: #7ad7df;
+  --color-marca-500: #4ecad4;
+  --color-marca-600: #3ea2aa;
+  --color-marca-700: #2f797f;
+  --color-marca-800: #1f5155;
+  --color-marca-900: #112c2f;
+  --color-marca-950: #0a1b1d;
+
+  /* Verde profundo del panel y de los títulos. */
+  --color-profundo-50: #f0f3f3;
+  --color-profundo-100: #d9e2e2;
+  --color-profundo-200: #b3c5c5;
+  --color-profundo-300: #809e9e;
+  --color-profundo-400: #406e6e;
+  --color-profundo-500: #003d3d;
+  --color-profundo-600: #003131;
+  --color-profundo-700: #002525;
+  --color-profundo-800: #001818;
+  --color-profundo-900: #000d0d;
+  --color-profundo-950: #000808;
+
+  --color-neutral-50: #fcfcfc;
+  --color-neutral-100: #f1f4f4;
+  --color-neutral-200: #e1e7e7;
+  --color-neutral-300: #c9d2d2;
+  --color-neutral-400: #9aa8a8;
+  --color-neutral-500: #6d7e7e;
+  --color-neutral-600: #4a5c5c;
+  --color-neutral-700: #2f4141;
+  --color-neutral-800: #172c2c;
+  --color-neutral-900: #011818;
+  --color-neutral-950: #000d0d;
+}
