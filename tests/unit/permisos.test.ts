@@ -1,11 +1,32 @@
 import { describe, expect, it } from 'vitest'
-import { puede, rutasPermitidas } from '~/utils/permisos'
+import { puede, rutaPermitida, rutasPermitidas } from '~/utils/permisos'
 
 describe('permisos por rol', () => {
-  it('rutasPermitidas sigue la tabla de roles de la especificación', () => {
-    expect(rutasPermitidas('asesor')).toEqual(['/', '/clientes', '/agenda', '/avisos', '/reportes'])
-    expect(rutasPermitidas('auxiliar')).toEqual(['/', '/clientes', '/agenda', '/avisos'])
-    expect(rutasPermitidas('supervisor')).toEqual(['/', '/clientes', '/agenda', '/avisos', '/reportes', '/usuarios'])
+  it('rutasPermitidas sigue la tabla de roles de la especificación y de los wireframes', () => {
+    expect(rutasPermitidas('asesor')).toEqual([
+      '/', '/clientes', '/agenda', '/avisos', '/reportes',
+      '/pension-final', '/modalidades', '/servicios-complementarios',
+      '/diagnosticos', '/correcciones', '/biblioteca', '/configuracion',
+    ])
+    expect(rutasPermitidas('auxiliar')).toEqual([
+      '/', '/clientes', '/agenda', '/avisos',
+      '/gestion-documental', '/biblioteca', '/configuracion',
+    ])
+    expect(rutasPermitidas('supervisor')).toEqual([
+      '/', '/clientes', '/agenda', '/avisos', '/reportes', '/usuarios',
+      '/formatos-institucionales', '/configuracion',
+    ])
+  })
+
+  it('las pantallas exclusivas de un rol no están permitidas a los demás', () => {
+    expect(rutaPermitida('auxiliar', '/reportes')).toBe(false)
+    expect(rutaPermitida('auxiliar', '/usuarios')).toBe(false)
+    expect(rutaPermitida('asesor', '/usuarios')).toBe(false)
+    expect(rutaPermitida('supervisor', '/modalidades')).toBe(false)
+    expect(rutaPermitida('supervisor', '/biblioteca')).toBe(false)
+    expect(rutaPermitida('asesor', '/formatos-institucionales')).toBe(false)
+    expect(rutaPermitida('asesor', '/gestion-documental')).toBe(false)
+    expect(rutaPermitida('asesor', '/modalidades/123')).toBe(true)
   })
 
   it('puede distingue las acciones de cada rol', () => {

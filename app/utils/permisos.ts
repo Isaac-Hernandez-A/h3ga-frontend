@@ -2,9 +2,21 @@ import type { Rol } from '~/types/sesion'
 
 // El menú y el middleware ocultan lo que no corresponde, pero el backend es quien impone los permisos.
 const RUTAS_POR_ROL: Record<Rol, string[]> = {
-  asesor: ['/', '/clientes', '/agenda', '/avisos', '/reportes'],
-  auxiliar: ['/', '/clientes', '/agenda', '/avisos'],
-  supervisor: ['/', '/clientes', '/agenda', '/avisos', '/reportes', '/usuarios'],
+  // Fase 1 (clientes, agenda, avisos, reportes, usuarios) más las pantallas de los wireframes que
+  // construye el resto del equipo (modalidades, diagnósticos, correcciones, etc.).
+  asesor: [
+    '/', '/clientes', '/agenda', '/avisos', '/reportes',
+    '/pension-final', '/modalidades', '/servicios-complementarios',
+    '/diagnosticos', '/correcciones', '/biblioteca', '/configuracion',
+  ],
+  auxiliar: [
+    '/', '/clientes', '/agenda', '/avisos',
+    '/gestion-documental', '/biblioteca', '/configuracion',
+  ],
+  supervisor: [
+    '/', '/clientes', '/agenda', '/avisos', '/reportes', '/usuarios',
+    '/formatos-institucionales', '/configuracion',
+  ],
 }
 
 const ACCIONES_POR_ROL = {

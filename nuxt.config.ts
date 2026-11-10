@@ -9,10 +9,6 @@ export default defineNuxtConfig({
       apiBase: 'http://localhost:3001/api/v1',
     },
   },
-  // Iconos locales: app/assets/icons/Nombre.svg -> icon="h3ga:Nombre"
-  icon: {
-    customCollections: [{ prefix: 'h3ga', dir: './app/assets/icons', normalizeIconName: false }],
-  },
   app: {
     head: {
       htmlAttrs: { lang: 'es' },
