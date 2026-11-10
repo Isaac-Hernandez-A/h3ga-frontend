@@ -16,3 +16,8 @@ node_modules
 # Archivos del sistema
 .DS_Store
 Thumbs.db
+
+# Artefactos de desarrollo y pruebas
+0.0.0.0
+playwright-report
+test-results
