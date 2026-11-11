@@ -1,15 +1,6 @@
-// Contrato del login (POST /auth/login). Provisional: reemplazar por los tipos generados
-// (`pnpm api:types` -> types/api.d.ts, components['schemas']['SesionRespuesta']) en cuanto el backend esté levantado.
-export type Rol = 'asesor' | 'auxiliar' | 'supervisor'
+import type { components } from '~~/types/api'
 
-export interface UsuarioSesion {
-  id: string
-  nombre: string
-  rol: Rol
-}
-
-export interface SesionRespuesta {
-  access_token: string
-  expires_in: number
-  usuario: UsuarioSesion
-}
+// Tipos generados desde el Swagger del backend (`pnpm api:types` -> types/api.d.ts).
+export type SesionRespuesta = components['schemas']['SesionRespuesta']
+export type UsuarioSesion = components['schemas']['UsuarioSesion']
+export type Rol = UsuarioSesion['rol']

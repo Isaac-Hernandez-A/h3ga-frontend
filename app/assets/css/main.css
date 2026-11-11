@@ -32,6 +32,19 @@
   --color-profundo-900: #000d0d;
   --color-profundo-950: #000808;
 
+  /* Amarillo de los botones de acción principal y de las etiquetas del Auxiliar. */
+  --color-acento-50: #fffcf0;
+  --color-acento-100: #fff7d9;
+  --color-acento-200: #fff0b3;
+  --color-acento-300: #ffe680;
+  --color-acento-400: #ffd940;
+  --color-acento-500: #ffcc00;
+  --color-acento-600: #cca300;
+  --color-acento-700: #997a00;
+  --color-acento-800: #665200;
+  --color-acento-900: #382d00;
+  --color-acento-950: #1f1900;
+
   --color-neutral-50: #fcfcfc;
   --color-neutral-100: #f1f4f4;
   --color-neutral-200: #e1e7e7;
