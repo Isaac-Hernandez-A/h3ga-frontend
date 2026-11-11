@@ -46,6 +46,10 @@ describe('permisos por rol', () => {
     expect(puede('asesor', 'f0.ver')).toBe(true)
     expect(puede('supervisor', 'f0.ver')).toBe(true)
     expect(puede('auxiliar', 'f0.ver')).toBe(false)
+    // La lista de auxiliares autorizados la ven el Asesor y el Supervisor; el Auxiliar no puede leerla.
+    expect(puede('asesor', 'auxiliares.ver')).toBe(true)
+    expect(puede('supervisor', 'auxiliares.ver')).toBe(true)
+    expect(puede('auxiliar', 'auxiliares.ver')).toBe(false)
     // El F1 solo lo captura el Asesor.
     expect(puede('asesor', 'f1.ver')).toBe(true)
     expect(puede('supervisor', 'f1.ver')).toBe(false)

@@ -6,6 +6,7 @@ definePageMeta({ titulo: 'Expediente del cliente' })
 const id = String(useRoute().params.id)
 const expediente = useExpediente(id)
 const sesion = useSessionStore()
+const verAuxiliares = computed(() => (sesion.usuario ? puede(sesion.usuario.rol, 'auxiliares.ver') : false))
 const verF0 = computed(() => (sesion.usuario ? puede(sesion.usuario.rol, 'f0.ver') : false))
 const { cliente, etapas, estatus, catalogos, usuarios, eventos, avisos, documentos, cargando, estado, asesorNombre, cargar, recargarEtapas } = expediente
 </script>
@@ -95,14 +96,20 @@ const { cliente, etapas, estatus, catalogos, usuarios, eventos, avisos, document
       v-else-if="cliente"
       class="grid items-start gap-5 xl:grid-cols-[minmax(360px,440px)_1fr]"
     >
-      <ClientePerfil
-        :cliente="cliente"
-        :etapas="etapas?.etapas ?? []"
-        :estatus="estatus"
-        :catalogos="catalogos"
-        :asesor-nombre="asesorNombre"
-        :eventos="eventos"
-      />
+      <div class="space-y-5">
+        <ClientePerfil
+          :cliente="cliente"
+          :etapas="etapas?.etapas ?? []"
+          :estatus="estatus"
+          :catalogos="catalogos"
+          :asesor-nombre="asesorNombre"
+          :eventos="eventos"
+        />
+        <AuxiliaresAutorizados
+          v-if="verAuxiliares"
+          :cliente-id="id"
+        />
+      </div>
       <SeguimientoTramite
         :cliente-id="id"
         :etapas="etapas"

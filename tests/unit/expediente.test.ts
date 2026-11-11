@@ -264,6 +264,15 @@ describe('Expediente del cliente (ver detalles)', () => {
     }
   })
 
+  it('la sección "Auxiliares autorizados" la ven el Asesor y el Supervisor, pero no el Auxiliar (que no puede leer esa lista)', async () => {
+    for (const [rol, esperado] of [['asesor', true], ['supervisor', true], ['auxiliar', false]] as const) {
+      const { wrapper, fetchMock } = await abrir({ rol })
+      expect(wrapper.find('[data-auxiliares]').exists(), rol).toBe(esperado)
+      expect(rutas(fetchMock).includes(`/clientes/${CLIENTE.id}/auxiliares`), rol).toBe(esperado)
+      wrapper.unmount()
+    }
+  })
+
   it('un 404 muestra "Cliente no encontrado" con el enlace para volver', async () => {
     const { wrapper } = await abrir({ fallaCliente: 404 })
 
