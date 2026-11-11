@@ -32,7 +32,7 @@ const ACCIONES_POR_ROL = {
   // Ver quién ayuda en un expediente: el Asesor dueño y el Supervisor (el Auxiliar no puede leer la lista).
   'auxiliares.ver': ['asesor', 'supervisor'],
   'documentos.subir': ['asesor', 'auxiliar'],
-  'documentos.revisar': ['auxiliar', 'supervisor'],
+  'documentos.revisar': ['asesor', 'auxiliar'],
   'agenda.escribir': ['asesor'],
   'reportes.ver': ['asesor', 'supervisor'],
   'usuarios.administrar': ['supervisor'],

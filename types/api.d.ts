@@ -85,6 +85,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auxiliares": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar los usuarios con rol auxiliar
+         * @description Roles permitidos: asesor, supervisor.
+         */
+        get: operations["UsuariosRolesController_listarAuxiliares"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/usuarios/{usuarioId}": {
         parameters: {
             query?: never;
@@ -911,7 +931,11 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Eliminar un escenario de pensión
+         * @description Roles permitidos: asesor.
+         */
+        delete: operations["DiagnosticosController_eliminarEscenario"];
         options?: never;
         head?: never;
         /**
@@ -1688,6 +1712,14 @@ export interface components {
             activo: boolean;
             /** Format: date-time */
             fecha_creacion: string;
+        };
+        AuxiliarRespuesta: {
+            id: string;
+            nombre: string;
+            apellido_paterno: string;
+            apellido_materno: string;
+            correo_electronico: string;
+            activo: boolean;
         };
         CrearUsuarioDto: {
             rol_id: number;
@@ -2700,6 +2732,47 @@ export interface operations {
                 content?: never;
             };
             /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UsuariosRolesController_listarAuxiliares: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuxiliarRespuesta"][];
+                };
+            };
+            /**
+             * @description Falta el token o no es válido.
+             *
+             *     Token ausente, vencido o inválido.
+             */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /**
+             * @description El rol no puede consultar los auxiliares (auxiliar).
+             *
+             *     El rol del usuario no tiene permiso en esta ruta.
+             */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4806,6 +4879,41 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["EscenarioPension"];
                 };
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_eliminarEscenario: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+                escenarioId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Escenario eliminado. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Token ausente, vencido o inválido. */
             401: {

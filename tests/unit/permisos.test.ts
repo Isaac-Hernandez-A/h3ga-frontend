@@ -54,6 +54,10 @@ describe('permisos por rol', () => {
     expect(puede('asesor', 'f1.ver')).toBe(true)
     expect(puede('supervisor', 'f1.ver')).toBe(false)
     expect(puede('auxiliar', 'f1.ver')).toBe(false)
+    // Revisar documentos: Asesor y Auxiliar, no el Supervisor.
+    expect(puede('asesor', 'documentos.revisar')).toBe(true)
+    expect(puede('auxiliar', 'documentos.revisar')).toBe(true)
+    expect(puede('supervisor', 'documentos.revisar')).toBe(false)
     expect(puede('asesor', 'documentos.subir')).toBe(true)
     expect(puede('auxiliar', 'documentos.subir')).toBe(true)
     expect(puede('supervisor', 'documentos.subir')).toBe(false)

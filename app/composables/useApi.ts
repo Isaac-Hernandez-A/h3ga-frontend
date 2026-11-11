@@ -91,8 +91,8 @@ export function useApi() {
     }
   }
 
-  // Pide un archivo con el token y lo guarda con el nombre de Content-Disposition.
-  async function descargar(ruta: string, nombreSugerido = 'descarga') {
+  // Pide un archivo con el token y devuelve su contenido (para verlo o guardarlo).
+  async function obtenerArchivo(ruta: string, nombreSugerido = 'descarga'): Promise<{ blob: Blob, nombre: string }> {
     exigirSesionVigente()
     let respuesta
     try {
@@ -117,8 +117,13 @@ export function useApi() {
       }
       throw aApiError(error)
     }
-    const nombre = nombreDeArchivo(respuesta.headers.get('content-disposition')) ?? nombreSugerido
-    const url = URL.createObjectURL(respuesta._data as Blob)
+    return { blob: respuesta._data as Blob, nombre: nombreDeArchivo(respuesta.headers.get('content-disposition')) ?? nombreSugerido }
+  }
+
+  // Pide un archivo con el token y lo guarda con el nombre de Content-Disposition.
+  async function descargar(ruta: string, nombreSugerido = 'descarga') {
+    const { blob, nombre } = await obtenerArchivo(ruta, nombreSugerido)
+    const url = URL.createObjectURL(blob)
     const enlace = document.createElement('a')
     enlace.href = url
     enlace.download = nombre
@@ -137,5 +142,6 @@ export function useApi() {
     patch: <T>(ruta: string, cuerpo?: unknown) => pedir<T>('PATCH', ruta, { body: cuerpo }),
     delete: <T = void>(ruta: string) => pedir<T>('DELETE', ruta),
     descargar,
+    obtenerArchivo,
   }
 }

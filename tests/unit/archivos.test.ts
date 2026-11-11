@@ -39,6 +39,8 @@ function api(rol: Rol = 'asesor', documentos: unknown[] = DOCUMENTOS) {
       lista.push(nuevo)
       return Promise.resolve(nuevo)
     }
+    const revision = r.match(new RegExp(`^/clientes/${CLIENTE.id}/documentos/([^/]+)$`))
+    if (revision && method === 'PATCH') return Promise.resolve(Object.assign(lista.find(d => (d as { id: string }).id === revision[1])!, (opciones as Llamada[1]).body))
     if (r === '/catalogos/tipos-documento') return Promise.resolve(TIPOS_DOCUMENTO)
     if (r === '/catalogos/estatus') return Promise.resolve(ESTATUS)
     if (r === '/catalogos/regimenes') return Promise.resolve(REGIMENES)
@@ -227,6 +229,140 @@ describe('Archivos del cliente (ver archivos)', () => {
 
       expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Solo se aceptan archivos PDF, JPG o PNG.')
       expect(enDocumento('select[name="tipo_documento_id"]')).not.toBeNull()
+    })
+  })
+
+  describe('vista previa del archivo', () => {
+    const clicIcono = async (wrapper: Awaited<ReturnType<typeof abrir>>['wrapper'], nombre: string) => {
+      const fila = filas(wrapper).find(f => f.text().includes(nombre))!
+      await fila.find('[data-accion="vista-previa"]').trigger('click')
+      await flushPromises()
+    }
+    beforeEach(() => {
+      URL.createObjectURL = vi.fn(() => 'blob:vista-previa')
+      URL.revokeObjectURL = vi.fn()
+    })
+
+    it('al picar el documento se abre una ventana con el PDF, pedido con el token', async () => {
+      const { wrapper, fetchMock } = await abrir()
+      await clicIcono(wrapper, 'Constancia de semanas cotizadas.pdf')
+
+      await vi.waitFor(() => expect(enDocumento('iframe[data-vista-pdf]')).not.toBeNull())
+      expect(enDocumento('iframe[data-vista-pdf]')!.getAttribute('src')).toBe('blob:vista-previa')
+      const [ruta, opciones] = fetchMock.raw.mock.calls[0] as Llamada
+      expect(ruta).toBe(`/clientes/${CLIENTE.id}/documentos/${DOCUMENTOS[0]!.id}/descargar`)
+      expect(opciones.headers!.Authorization).toBe(`Bearer ${useSessionStore().token}`)
+      expect(document.body.textContent).toContain('Constancia de semanas cotizadas.pdf')
+    })
+
+    it('una imagen se muestra como imagen', async () => {
+      const { wrapper } = await abrir()
+      await clicIcono(wrapper, 'Identificación oficial.png')
+      await vi.waitFor(() => expect(enDocumento('img[data-vista-imagen]')).not.toBeNull())
+      expect(enDocumento('iframe[data-vista-pdf]')).toBeNull()
+    })
+
+    it('al cerrar la ventana se libera el archivo', async () => {
+      const { wrapper } = await abrir()
+      await clicIcono(wrapper, 'Constancia de semanas cotizadas.pdf')
+      await vi.waitFor(() => expect(enDocumento('iframe[data-vista-pdf]')).not.toBeNull())
+      enDocumento('button[data-accion="cerrar-vista"]')!.click()
+      await flushPromises()
+      expect(enDocumento('iframe[data-vista-pdf]')).toBeNull()
+      expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:vista-previa')
+    })
+
+    it('si no se puede abrir el archivo lo dice en la ventana', async () => {
+      const { wrapper, fetchMock } = await abrir()
+      fetchMock.raw.mockImplementation(() => Promise.reject(errorHttp(404, { message: 'Archivo no encontrado' })))
+      await clicIcono(wrapper, 'Constancia de semanas cotizadas.pdf')
+      await vi.waitFor(() => expect(document.body.textContent).toMatch(/no se pudo abrir el archivo/i))
+    })
+  })
+
+  describe('revisar un documento', () => {
+    const PRIMERO = DOCUMENTOS[0]!.id
+
+    it('"Revisar" lo ven el Asesor y el Auxiliar, pero no el Supervisor', async () => {
+      for (const [rol, esperado] of [['asesor', true], ['auxiliar', true], ['supervisor', false]] as const) {
+        const { wrapper } = await abrir(rol)
+        expect(wrapper.find('button[data-accion="revisar"]').exists(), rol).toBe(esperado)
+        wrapper.unmount()
+      }
+    })
+
+    async function abrirRevision(rol: Rol = 'auxiliar') {
+      const base = await abrir(rol)
+      const fila = filas(base.wrapper).find(f => f.text().includes('Constancia de semanas cotizadas.pdf'))!
+      await fila.find('button[data-accion="revisar"]').trigger('click')
+      await vi.waitFor(() => expect(enDocumento('textarea[name="observaciones"]')).not.toBeNull())
+      const elegir = async (estatus: string) => { enDocumento(`input[type="radio"][name="estatus"][value="${estatus}"]`)!.click(); await flushPromises() }
+      const poner = async (selector: string, valor: string) => {
+        const el = enDocumento(selector) as HTMLInputElement | HTMLTextAreaElement
+        el.value = valor
+        el.dispatchEvent(new Event('input', { bubbles: true }))
+        await flushPromises()
+      }
+      const guardar = async () => { enDocumento('button[data-accion="guardar-revision"]')!.click(); await flushPromises() }
+      const revisiones = () => (base.fetchMock.mock.calls as Llamada[]).filter(([r, o]) => o.method === 'PATCH' && r === `/clientes/${CLIENTE.id}/documentos/${PRIMERO}`)
+      return { ...base, elegir, poner, guardar, revisiones }
+    }
+
+    it('abre una ventana con el archivo, su tipo y el estatus actual, y no deja guardar mientras no haya cambios', async () => {
+      await abrirRevision()
+      expect(document.body.textContent).toContain('Constancia de semanas cotizadas.pdf')
+      expect(document.body.textContent).toContain('Acta de Nacimiento')
+      expect((enDocumento('input[type="radio"][name="estatus"][value="por_confirmar"]') as HTMLInputElement).checked).toBe(true)
+      expect(enDocumento('button[data-accion="guardar-revision"]')!.hasAttribute('disabled')).toBe(true)
+    })
+
+    it('ofrece los tres estatus del contrato: Aprobado, Por confirmar y Con observaciones', async () => {
+      await abrirRevision()
+      const valores = [...document.body.querySelectorAll('input[type="radio"][name="estatus"]')].map(i => (i as HTMLInputElement).value)
+      expect(valores).toEqual(['si', 'por_confirmar', 'no'])
+    })
+
+    it('aprobar envía PATCH solo con el estatus nuevo, actualiza la fila y cierra la ventana', async () => {
+      const { wrapper, elegir, guardar, revisiones } = await abrirRevision()
+      await elegir('si')
+      await guardar()
+
+      expect(revisiones()).toHaveLength(1)
+      expect(revisiones()[0]![1].body).toEqual({ estatus: 'si' })
+      await vi.waitFor(() => expect(enDocumento('textarea[name="observaciones"]')).toBeNull())
+      expect(filas(wrapper).find(f => f.text().includes('Constancia'))!.text()).toContain('Aprobado')
+    })
+
+    it('"Con observaciones" exige explicar qué observación tiene y la muestra en la tabla', async () => {
+      const { wrapper, elegir, poner, guardar, revisiones } = await abrirRevision()
+      await elegir('no')
+      await guardar()
+      expect(document.body.textContent).toMatch(/indica qué observación tiene el documento/i)
+      expect(revisiones()).toHaveLength(0)
+
+      await poner('textarea[name="observaciones"]', 'Falta la hoja 2')
+      await guardar()
+      expect(revisiones()[0]![1].body).toEqual({ estatus: 'no', observaciones: 'Falta la hoja 2' })
+      await vi.waitFor(() => expect(filas(wrapper).find(f => f.text().includes('Constancia'))!.text()).toContain('Falta la hoja 2'))
+    })
+
+    it('puede capturar el número de referencia y las observaciones sin cambiar el estatus', async () => {
+      const { poner, guardar, revisiones } = await abrirRevision()
+      await poner('input[name="numero_referencia"]', 'FOL-2026-0457')
+      await poner('textarea[name="observaciones"]', 'Folio confirmado')
+      await guardar()
+      expect(revisiones()[0]![1].body).toEqual({ numero_referencia: 'FOL-2026-0457', observaciones: 'Folio confirmado' })
+    })
+
+    it('un error del servidor se muestra en la ventana y no la cierra', async () => {
+      const { fetchMock, elegir, guardar } = await abrirRevision('asesor')
+      const original = fetchMock.getMockImplementation()!
+      fetchMock.mockImplementation((ruta, opciones) =>
+        (opciones as Llamada[1]).method === 'PATCH' ? Promise.reject(errorHttp(400, { message: 'El estatus no es válido.' })) : original(ruta, opciones))
+      await elegir('si')
+      await guardar()
+      expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('El estatus no es válido.')
+      expect(enDocumento('textarea[name="observaciones"]')).not.toBeNull()
     })
   })
 

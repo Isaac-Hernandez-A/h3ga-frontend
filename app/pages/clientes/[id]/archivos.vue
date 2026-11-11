@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DocumentoCliente, TipoDocumento } from '~/types/expediente'
+import { ApiError } from '~/utils/api-error'
 import { fechaLocalISO, formatearFechaCorta } from '~/utils/fechas'
 import { puede } from '~/utils/permisos'
 import { normalizarTexto } from '~/utils/texto'
@@ -72,6 +73,88 @@ async function descargar(documento: DocumentoCliente) {
   catch {
     // useApi ya avisó los 403 y los errores de red; los demás se muestran aquí.
     toast.add({ title: 'No se pudo descargar el archivo', description: documento.nombre_archivo_original, color: 'error' })
+  }
+}
+
+// Vista previa: el navegador muestra el PDF o la imagen directamente (sin librerías), con el archivo pedido con el token.
+const viendo = ref<DocumentoCliente | null>(null)
+const vistaUrl = ref<string | null>(null)
+const vistaCargando = ref(false)
+const vistaError = ref(false)
+const vistaAbierta = computed({ get: () => viendo.value !== null, set: (v) => { if (!v) cerrarVista() } })
+const vistaEsImagen = computed(() => Boolean(viendo.value?.mime_type.startsWith('image/')))
+
+function cerrarVista() {
+  if (vistaUrl.value) URL.revokeObjectURL(vistaUrl.value)
+  vistaUrl.value = null
+  viendo.value = null
+}
+async function verArchivo(documento: DocumentoCliente) {
+  viendo.value = documento
+  vistaUrl.value = null
+  vistaError.value = false
+  vistaCargando.value = true
+  try {
+    const { blob } = await docs.obtenerArchivo(id, documento)
+    // Si se cerró la ventana mientras cargaba, no se deja el archivo en memoria.
+    if (viendo.value?.id !== documento.id) return
+    vistaUrl.value = URL.createObjectURL(blob)
+  }
+  catch {
+    vistaError.value = true
+  }
+  finally {
+    vistaCargando.value = false
+  }
+}
+
+// Revisar un documento (Auxiliar y Supervisor): estatus, observaciones y número de referencia.
+const puedeRevisar = computed(() => (sesion.usuario ? puede(sesion.usuario.rol, 'documentos.revisar') : false))
+const revisando = ref<DocumentoCliente | null>(null)
+const revisionAbierta = computed({ get: () => revisando.value !== null, set: (v) => { if (!v) revisando.value = null } })
+const revision = reactive({ estatus: 'por_confirmar', observaciones: '', numero_referencia: '' })
+const errorRevision = ref<string | null>(null)
+const errorObservaciones = ref<string | null>(null)
+const guardandoRevision = ref(false)
+
+function abrirRevision(d: DocumentoCliente) {
+  revision.estatus = d.estatus
+  revision.observaciones = d.observaciones ?? ''
+  revision.numero_referencia = d.numero_referencia ?? ''
+  errorRevision.value = null
+  errorObservaciones.value = null
+  revisando.value = d
+}
+// Solo se envía lo que cambió.
+const cambiosRevision = computed(() => {
+  const d = revisando.value
+  const c: Record<string, string> = {}
+  if (!d) return c
+  if (revision.estatus !== d.estatus) c.estatus = revision.estatus
+  if (revision.observaciones.trim() !== (d.observaciones ?? '')) c.observaciones = revision.observaciones.trim()
+  if (revision.numero_referencia.trim() !== (d.numero_referencia ?? '')) c.numero_referencia = revision.numero_referencia.trim()
+  return c
+})
+
+async function guardarRevision() {
+  const d = revisando.value
+  if (!d || Object.keys(cambiosRevision.value).length === 0) return
+  errorRevision.value = null
+  errorObservaciones.value = revision.estatus === 'no' && !revision.observaciones.trim() ? 'Indica qué observación tiene el documento' : null
+  if (errorObservaciones.value) return
+  guardandoRevision.value = true
+  try {
+    const actualizado = await docs.revisar(id, d.id, cambiosRevision.value)
+    documentos.value = documentos.value.map(x => (x.id === actualizado.id ? actualizado : x))
+    revisando.value = null
+  }
+  catch (e) {
+    if (!(e instanceof ApiError)) throw e
+    // Sin conexión y sin permiso ya los avisó useApi.
+    if (e.status !== 0 && e.status !== 403) errorRevision.value = e.status === 400 ? e.mensaje : 'No se pudo guardar la revisión. Inténtalo de nuevo.'
+  }
+  finally {
+    guardandoRevision.value = false
   }
 }
 
@@ -311,11 +394,19 @@ async function alSubirse(nuevo: DocumentoCliente) {
                 >
                   <td class="px-4 py-3">
                     <span class="flex items-center gap-2">
-                      <UIcon
-                        name="i-lucide-file-text"
-                        class="size-5 shrink-0 text-neutral-500"
-                      />
-                      <span class="break-words">{{ documento.nombre_archivo_original }}</span>
+                      <button
+                        type="button"
+                        data-accion="vista-previa"
+                        class="flex items-center gap-2 text-left hover:text-marca-700 hover:underline"
+                        :aria-label="`Ver ${documento.nombre_archivo_original}`"
+                        @click="verArchivo(documento)"
+                      >
+                        <UIcon
+                          name="i-lucide-file-text"
+                          class="size-5 shrink-0 text-neutral-500"
+                        />
+                        <span class="break-words">{{ documento.nombre_archivo_original }}</span>
+                      </button>
                     </span>
                   </td>
                   <td class="whitespace-nowrap px-4 py-3 text-sm text-neutral-700">
@@ -330,8 +421,24 @@ async function alSubirse(nuevo: DocumentoCliente) {
                       :class="ESTATUS_DOCUMENTO[documento.estatus]?.clase"
                       :title="documento.observaciones ?? undefined"
                     >{{ ESTATUS_DOCUMENTO[documento.estatus]?.texto ?? documento.estatus }}</span>
+                    <p
+                      v-if="documento.observaciones"
+                      class="mt-1 max-w-xs text-xs text-neutral-600"
+                    >
+                      {{ documento.observaciones }}
+                    </p>
                   </td>
                   <td class="px-4 py-3 text-right">
+                    <UButton
+                      v-if="puedeRevisar"
+                      color="neutral"
+                      variant="ghost"
+                      size="sm"
+                      icon="i-lucide-clipboard-check"
+                      data-accion="revisar"
+                      :aria-label="`Revisar ${documento.nombre_archivo_original}`"
+                      @click="abrirRevision(documento)"
+                    />
                     <UButton
                       color="neutral"
                       variant="ghost"
@@ -400,5 +507,152 @@ async function alSubirse(nuevo: DocumentoCliente) {
         />
       </template>
     </UModal>
+
+    <UModal
+      v-model:open="vistaAbierta"
+      :title="viendo?.nombre_archivo_original ?? 'Documento'"
+      :description="viendo ? nombreTipo(viendo.tipo_documento_id) : ''"
+      :ui="{ content: 'sm:max-w-4xl' }"
+    >
+      <template #body>
+        <p
+          v-if="vistaCargando"
+          class="py-16 text-center text-neutral-500"
+          role="status"
+        >
+          Cargando el archivo…
+        </p>
+        <p
+          v-else-if="vistaError"
+          role="alert"
+          class="py-16 text-center text-red-700"
+        >
+          No se pudo abrir el archivo. Puedes intentar descargarlo.
+        </p>
+        <img
+          v-else-if="vistaUrl && vistaEsImagen"
+          data-vista-imagen
+          :src="vistaUrl"
+          :alt="viendo?.nombre_archivo_original"
+          class="mx-auto max-h-[70vh] max-w-full rounded-lg"
+        >
+        <iframe
+          v-else-if="vistaUrl"
+          data-vista-pdf
+          :src="vistaUrl"
+          :title="viendo?.nombre_archivo_original"
+          class="h-[70vh] w-full rounded-lg border border-neutral-200"
+        />
+      </template>
+      <template #footer>
+        <div class="flex w-full justify-end gap-3">
+          <UButton
+            v-if="viendo"
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-download"
+            data-accion="descargar-vista"
+            @click="descargar(viendo)"
+          >
+            Descargar
+          </UButton>
+          <UButton
+            data-accion="cerrar-vista"
+            @click="cerrarVista"
+          >
+            Cerrar
+          </UButton>
+        </div>
+      </template>
+    </UModal>
+
+    <UModal
+      v-model:open="revisionAbierta"
+      title="Revisar documento"
+      description="Indica el estatus del documento y, si hace falta, sus observaciones."
+    >
+      <template #body>
+        <form
+          v-if="revisando"
+          class="space-y-4"
+          novalidate
+          @submit.prevent="guardarRevision"
+        >
+          <p class="font-medium text-neutral-900">
+            {{ revisando.nombre_archivo_original }}
+            <span class="block text-sm font-normal text-neutral-600">{{ nombreTipo(revisando.tipo_documento_id) }}</span>
+          </p>
+          <fieldset class="flex flex-wrap gap-2">
+            <legend class="mb-1 text-sm font-semibold text-profundo-700">
+              Estatus
+            </legend>
+            <label
+              v-for="o in [{ v: 'si', t: 'Aprobado' }, { v: 'por_confirmar', t: 'Por confirmar' }, { v: 'no', t: 'Con observaciones' }]"
+              :key="o.v"
+              class="flex cursor-pointer items-center gap-2 rounded-lg border border-neutral-300 px-3 py-2 text-sm has-[:checked]:border-marca-500 has-[:checked]:bg-marca-50"
+            >
+              <input
+                v-model="revision.estatus"
+                type="radio"
+                name="estatus"
+                :value="o.v"
+              >
+              {{ o.t }}
+            </label>
+          </fieldset>
+          <label class="block text-sm font-semibold text-profundo-700">
+            Observaciones
+            <textarea
+              v-model="revision.observaciones"
+              name="observaciones"
+              rows="3"
+              class="mt-1 w-full rounded-lg border border-marca-200 px-3 py-2 text-base font-normal"
+            />
+            <span
+              v-if="errorObservaciones"
+              class="block text-sm font-normal text-red-700"
+            >{{ errorObservaciones }}</span>
+          </label>
+          <label class="block text-sm font-semibold text-profundo-700">
+            Número de referencia
+            <input
+              v-model="revision.numero_referencia"
+              name="numero_referencia"
+              autocomplete="off"
+              class="mt-1 w-full rounded-lg border border-marca-200 px-3 py-2 text-base font-normal"
+            >
+          </label>
+          <p
+            v-if="errorRevision"
+            role="alert"
+            class="text-sm font-medium text-red-700"
+          >
+            {{ errorRevision }}
+          </p>
+        </form>
+      </template>
+      <template #footer>
+        <div class="flex w-full justify-end gap-3">
+          <UButton
+            color="neutral"
+            variant="outline"
+            data-accion="cancelar-revision"
+            @click="revisando = null"
+          >
+            Cancelar
+          </UButton>
+          <UButton
+            data-accion="guardar-revision"
+            :disabled="Object.keys(cambiosRevision).length === 0"
+            :loading="guardandoRevision"
+            class="bg-acento-500 font-semibold text-profundo-900 hover:bg-acento-400"
+            @click="guardarRevision"
+          >
+            Guardar
+          </UButton>
+        </div>
+      </template>
+    </UModal>
+
   </section>
 </template>
