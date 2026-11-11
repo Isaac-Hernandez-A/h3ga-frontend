@@ -155,7 +155,7 @@ const claseEnlace = (ruta: string) => [
               class="size-6"
             />
           </button>
-          <h1 class="truncate font-display text-2xl font-semibold leading-none text-profundo-900">
+          <h1 class="truncate font-display text-2xl font-semibold leading-tight text-profundo-900">
             {{ titulo }}
           </h1>
         </div>

@@ -24,6 +24,7 @@ const api = useApi()
 // El Auxiliar no puede leer historial laboral ni objetivos: su vista del cliente es el expediente.
 const permitido = sesion.usuario ? puede(sesion.usuario.rol, 'f0.ver') : false
 if (!permitido) await navigateTo(`/clientes/${id}`)
+const puedeF1 = sesion.usuario ? puede(sesion.usuario.rol, 'f1.ver') : false
 const soloLectura = computed(() => !(sesion.usuario && puede(sesion.usuario.rol, 'clientes.editar')))
 
 const { cliente, etapas, catalogos, documentos, cargando, estado, asesorNombre, cargar, cargarDocumentos } = useExpediente(id)
@@ -125,12 +126,11 @@ async function descargarF0() {
         >
           Ver expediente
         </UButton>
-        <!-- El Diagnóstico especializado (F1) se construye aparte: mientras tanto el botón no hace nada. -->
         <UButton
+          v-if="puedeF1"
+          :to="`/clientes/${id}/f1`"
           data-accion="diagnostico-especializado"
           icon="i-lucide-clipboard-pen-line"
-          disabled
-          title="Próximamente"
           class="bg-profundo-500 text-white"
         >
           Diagnóstico especializado

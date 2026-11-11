@@ -200,12 +200,13 @@ describe('Diagnóstico inicial F0 (wizard)', () => {
     expect(wrapper.find('a[data-accion="ver-expediente"]').attributes('href')).toBe(`/clientes/${CLIENTE.id}`)
   })
 
-  it('el botón de Diagnóstico especializado (F1) queda deshabilitado hasta que exista esa pantalla', async () => {
-    const { wrapper } = await abrir()
+  it('el botón de Diagnóstico especializado (F1) lleva a la pantalla del F1, solo para el Asesor', async () => {
+    const asesor = await abrir()
+    expect(asesor.wrapper.find('a[data-accion="diagnostico-especializado"]').attributes('href')).toBe(`/clientes/${CLIENTE.id}/f1`)
+    asesor.wrapper.unmount()
 
-    const boton = wrapper.find('button[data-accion="diagnostico-especializado"]')
-    expect(boton.exists()).toBe(true)
-    expect(boton.attributes('disabled')).toBeDefined()
+    const supervisor = await abrir(null, { rol: 'supervisor' })
+    expect(supervisor.wrapper.find('[data-accion="diagnostico-especializado"]').exists()).toBe(false)
   })
 
   it('tiene los 6 pasos del wireframe y Continuar/Retroceder navegan entre ellos', async () => {

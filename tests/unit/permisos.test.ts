@@ -46,6 +46,10 @@ describe('permisos por rol', () => {
     expect(puede('asesor', 'f0.ver')).toBe(true)
     expect(puede('supervisor', 'f0.ver')).toBe(true)
     expect(puede('auxiliar', 'f0.ver')).toBe(false)
+    // El F1 solo lo captura el Asesor.
+    expect(puede('asesor', 'f1.ver')).toBe(true)
+    expect(puede('supervisor', 'f1.ver')).toBe(false)
+    expect(puede('auxiliar', 'f1.ver')).toBe(false)
     expect(puede('asesor', 'documentos.subir')).toBe(true)
     expect(puede('auxiliar', 'documentos.subir')).toBe(true)
     expect(puede('supervisor', 'documentos.subir')).toBe(false)

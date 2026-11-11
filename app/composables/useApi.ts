@@ -62,7 +62,7 @@ export function useApi() {
       toast.add({ title: 'Sin permiso', description: MENSAJE_SIN_PERMISO, color: 'warning' })
     }
 
-    return new ApiError(status, mensaje, status === 400 && mensajes ? camposDe(mensajes) : undefined)
+    return new ApiError(status, mensaje, status === 400 && mensajes ? camposDe(mensajes) : undefined, typeof cuerpo === 'object' ? cuerpo as Record<string, unknown> : undefined)
   }
 
   function exigirSesionVigente() {
@@ -76,7 +76,7 @@ export function useApi() {
     return sesion.token ? { Authorization: `Bearer ${sesion.token}` } : {}
   }
 
-  async function pedir<T>(method: 'GET' | 'POST' | 'PUT' | 'PATCH', ruta: string, extra: { body?: unknown, query?: Consulta } = {}): Promise<T> {
+  async function pedir<T>(method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', ruta: string, extra: { body?: unknown, query?: Consulta } = {}): Promise<T> {
     exigirSesionVigente()
     try {
       return await $fetch<T>(ruta, {
@@ -103,6 +103,18 @@ export function useApi() {
       })
     }
     catch (error) {
+      // Con responseType 'blob' el cuerpo del error también llega como Blob: se lee para conservar el mensaje.
+      const e = error as { response?: { _data?: unknown }, data?: unknown }
+      if (e.response?._data instanceof Blob) {
+        try {
+          const cuerpo = JSON.parse(await e.response._data.text())
+          e.response._data = cuerpo
+          e.data = cuerpo
+        }
+        catch {
+          // Si no es JSON se deja tal cual.
+        }
+      }
       throw aApiError(error)
     }
     const nombre = nombreDeArchivo(respuesta.headers.get('content-disposition')) ?? nombreSugerido
@@ -123,6 +135,7 @@ export function useApi() {
     post: <T>(ruta: string, cuerpo?: unknown) => pedir<T>('POST', ruta, { body: cuerpo }),
     put: <T>(ruta: string, cuerpo?: unknown) => pedir<T>('PUT', ruta, { body: cuerpo }),
     patch: <T>(ruta: string, cuerpo?: unknown) => pedir<T>('PATCH', ruta, { body: cuerpo }),
+    delete: <T = void>(ruta: string) => pedir<T>('DELETE', ruta),
     descargar,
   }
 }

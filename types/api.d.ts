@@ -815,7 +815,7 @@ export interface paths {
         get: operations["DiagnosticosController_obtenerDiagnostico"];
         put?: never;
         /**
-         * Crear el diagnóstico especializado
+         * Crear el borrador del diagnóstico especializado
          * @description Roles permitidos: asesor.
          */
         post: operations["DiagnosticosController_crearDiagnostico"];
@@ -955,7 +955,11 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Eliminar un periodo de inconsistencia
+         * @description Roles permitidos: asesor.
+         */
+        delete: operations["DiagnosticosController_eliminarPeriodoInconsistencia"];
         options?: never;
         head?: never;
         /**
@@ -999,7 +1003,11 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Eliminar una acción del plan
+         * @description Roles permitidos: asesor.
+         */
+        delete: operations["DiagnosticosController_eliminarPlanAccion"];
         options?: never;
         head?: never;
         /**
@@ -1045,7 +1053,11 @@ export interface paths {
          * @description Roles permitidos: asesor.
          */
         get: operations["DiagnosticosController_listarHijos"];
-        put?: never;
+        /**
+         * Reemplazar la lista de hijos (una fila por hijo)
+         * @description Roles permitidos: asesor.
+         */
+        put: operations["DiagnosticosController_guardarHijos"];
         /**
          * Agregar un hijo a la situación patrimonial
          * @description Roles permitidos: asesor.
@@ -1189,6 +1201,310 @@ export interface paths {
          * @description Roles permitidos: asesor, auxiliar, supervisor.
          */
         get: operations["DiagnosticosController_listarObjetivosModalidad40"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalogos/documentos-diagnostico": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar los documentos requeridos del F1 (sección 2)
+         * @description Roles permitidos: asesor, auxiliar, supervisor.
+         */
+        get: operations["DiagnosticosController_listarTiposDocumentoDiagnostico"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clientes/{clienteId}/diagnostico/objetivos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar objetivos del cliente (sección 1)
+         * @description Roles permitidos: asesor.
+         */
+        get: operations["DiagnosticosController_leerObjetivos"];
+        /**
+         * Reemplazar objetivos del cliente (sección 1)
+         * @description Roles permitidos: asesor.
+         */
+        put: operations["DiagnosticosController_guardarObjetivos"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clientes/{clienteId}/diagnostico/estrategias-recomendadas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar estrategias recomendadas (sección 12)
+         * @description Roles permitidos: asesor.
+         */
+        get: operations["DiagnosticosController_leerEstrategiasRecomendadas"];
+        /**
+         * Reemplazar estrategias recomendadas (sección 12)
+         * @description Roles permitidos: asesor.
+         */
+        put: operations["DiagnosticosController_guardarEstrategiasRecomendadas"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clientes/{clienteId}/diagnostico/inconsistencias-generales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar revisión de inconsistencias (sección 4)
+         * @description Roles permitidos: asesor.
+         */
+        get: operations["DiagnosticosController_leerInconsistenciasGenerales"];
+        /**
+         * Reemplazar revisión de inconsistencias (sección 4)
+         * @description Roles permitidos: asesor.
+         */
+        put: operations["DiagnosticosController_guardarInconsistenciasGenerales"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clientes/{clienteId}/diagnostico/objetivos-modalidad-10": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar objetivos de Modalidad 10 (sección 7)
+         * @description Roles permitidos: asesor.
+         */
+        get: operations["DiagnosticosController_leerObjetivosModalidad10"];
+        /**
+         * Reemplazar objetivos de Modalidad 10 (sección 7)
+         * @description Roles permitidos: asesor.
+         */
+        put: operations["DiagnosticosController_guardarObjetivosModalidad10"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clientes/{clienteId}/diagnostico/objetivos-modalidad-40": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar objetivos de Modalidad 40 (sección 8)
+         * @description Roles permitidos: asesor.
+         */
+        get: operations["DiagnosticosController_leerObjetivosModalidad40"];
+        /**
+         * Reemplazar objetivos de Modalidad 40 (sección 8)
+         * @description Roles permitidos: asesor.
+         */
+        put: operations["DiagnosticosController_guardarObjetivosModalidad40"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clientes/{clienteId}/diagnostico/recuperacion-gestiones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar tipos de gestión de recuperación (sección 5)
+         * @description Roles permitidos: asesor.
+         */
+        get: operations["DiagnosticosController_leerRecuperacionGestiones"];
+        /**
+         * Reemplazar tipos de gestión de recuperación (sección 5)
+         * @description Roles permitidos: asesor.
+         */
+        put: operations["DiagnosticosController_guardarRecuperacionGestiones"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clientes/{clienteId}/diagnostico/recuperacion-evidencias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar evidencia mínima de recuperación (sección 5)
+         * @description Roles permitidos: asesor.
+         */
+        get: operations["DiagnosticosController_leerRecuperacionEvidencias"];
+        /**
+         * Reemplazar evidencia mínima de recuperación (sección 5)
+         * @description Roles permitidos: asesor.
+         */
+        put: operations["DiagnosticosController_guardarRecuperacionEvidencias"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clientes/{clienteId}/diagnostico/documentos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar documentos requeridos (sección 2)
+         * @description Roles permitidos: asesor.
+         */
+        get: operations["DiagnosticosController_leerDocumentos"];
+        /**
+         * Reemplazar documentos requeridos (sección 2)
+         * @description Roles permitidos: asesor.
+         */
+        put: operations["DiagnosticosController_guardarDocumentos"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clientes/{clienteId}/diagnostico/criterios-modalidad-10": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar criterios de aplicabilidad de Modalidad 10 (sección 7)
+         * @description Roles permitidos: asesor.
+         */
+        get: operations["DiagnosticosController_leerCriteriosModalidad10"];
+        /**
+         * Reemplazar criterios de aplicabilidad de Modalidad 10 (sección 7)
+         * @description Roles permitidos: asesor.
+         */
+        put: operations["DiagnosticosController_guardarCriteriosModalidad10"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clientes/{clienteId}/diagnostico/criterios-modalidad-40": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar requisitos y restricciones de Modalidad 40 (sección 8)
+         * @description Roles permitidos: asesor.
+         */
+        get: operations["DiagnosticosController_leerCriteriosModalidad40"];
+        /**
+         * Reemplazar requisitos y restricciones de Modalidad 40 (sección 8)
+         * @description Roles permitidos: asesor.
+         */
+        put: operations["DiagnosticosController_guardarCriteriosModalidad40"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clientes/{clienteId}/diagnostico/conveniencia-retroactivo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar evaluación de conveniencia del retroactivo (sección 9)
+         * @description Roles permitidos: asesor.
+         */
+        get: operations["DiagnosticosController_leerConvenienciaRetroactivo"];
+        /**
+         * Reemplazar evaluación de conveniencia del retroactivo (sección 9)
+         * @description Roles permitidos: asesor.
+         */
+        put: operations["DiagnosticosController_guardarConvenienciaRetroactivo"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clientes/{clienteId}/diagnostico/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Descargar el formato F1 en PDF
+         * @description Roles permitidos: asesor.
+         */
+        get: operations["DiagnosticosController_descargarPdf"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1781,45 +2097,45 @@ export interface components {
             fecha_analisis: string;
             asesor_id: string;
             fecha_primera_cotizacion: string | null;
-            cotizo_antes_julio_1997: boolean;
-            /** @enum {string} */
-            tipo_pension_probable: "cesantia" | "vejez" | "invalidez" | "viudez" | "otro";
-            edad_objetivo_pension: number;
+            cotizo_antes_julio_1997: boolean | null;
+            /** @enum {string|null} */
+            tipo_pension_probable: "cesantia" | "vejez" | "invalidez" | "viudez" | "otro" | null;
+            edad_objetivo_pension: number | null;
             comentarios_cliente: string | null;
             observaciones_regimen: string | null;
             fecha_ultima_baja: string | null;
             ultimo_salario_cotizado: number | null;
             fecha_vencimiento_conservacion: string | null;
-            /** @enum {string} */
-            tiene_conservacion_derechos: "si" | "no" | "requiere_validar";
+            /** @enum {string|null} */
+            tiene_conservacion_derechos: "si" | "no" | "requiere_validar" | null;
             tiempo_estimado_conservacion_meses: number | null;
-            /** @enum {string} */
-            dentro_de_conservacion: "si" | "no" | "requiere_validar";
+            /** @enum {string|null} */
+            dentro_de_conservacion: "si" | "no" | "requiere_validar" | null;
             requiere_reactivacion: boolean;
-            /** @enum {string} */
-            conviene_pensionar_ahora: "si" | "no" | "depende_escenario";
+            /** @enum {string|null} */
+            conviene_pensionar_ahora: "si" | "no" | "depende_escenario" | null;
             comentarios_conservacion: string | null;
             semanas_reconocidas_al_baja: number | null;
             semanas_descontadas: number;
             semanas_reintegradas: number;
-            semanas_efectivas_pension: number;
+            semanas_efectivas_pension: number | null;
             semanas_requeridas_pension: number | null;
-            /** @enum {string} */
-            trabaja_cuenta_propia: "si" | "no" | "parcialmente";
+            /** @enum {string|null} */
+            trabaja_cuenta_propia: "si" | "no" | "parcialmente" | null;
             actividad_economica: string | null;
             ingreso_mensual_aproximado: number | null;
-            /** @enum {string} */
-            conclusion_modalidad_10: "aplica" | "no_aplica" | "aplica_con_restricciones" | "requiere_regularizacion" | "temporal" | "evaluar" | "requiere_contabilidad";
+            /** @enum {string|null} */
+            conclusion_modalidad_10: "aplica" | "no_aplica" | "aplica_con_restricciones" | "requiere_regularizacion" | "temporal" | "evaluar" | "requiere_contabilidad" | null;
             comentarios_modalidad_10: string | null;
-            /** @enum {string} */
-            dado_de_baja_regimen_obligatorio: "si" | "no" | "requiere_validar";
-            /** @enum {string} */
-            conclusion_modalidad_40: "aplica" | "no_aplica" | "aplica_con_restricciones" | "requiere_regularizacion" | "temporal" | "evaluar" | "requiere_contabilidad";
+            /** @enum {string|null} */
+            dado_de_baja_regimen_obligatorio: "si" | "no" | "requiere_validar" | null;
+            /** @enum {string|null} */
+            conclusion_modalidad_40: "aplica" | "no_aplica" | "aplica_con_restricciones" | "requiere_regularizacion" | "temporal" | "evaluar" | "requiere_contabilidad" | null;
             salario_propuesto_m40: number | null;
             meses_propuestos_m40: number | null;
             evalua_retroactivo_m40: boolean;
             comentarios_modalidad_40: string | null;
-            justificacion_estrategia: string;
+            justificacion_estrategia: string | null;
             siguiente_paso_sugerido: string | null;
             conclusion_financiera: string | null;
             firma_cliente_path: string | null;
@@ -1832,104 +2148,94 @@ export interface components {
             actualizado_en: string;
         };
         CreateDiagnosticoEspecializadoDto: {
-            fecha_analisis?: string;
-            /** Format: uuid */
-            asesor_id: string;
-            fecha_primera_cotizacion?: string;
-            cotizo_antes_julio_1997: boolean;
-            /** @enum {string} */
-            tipo_pension_probable: "cesantia" | "vejez" | "invalidez" | "viudez" | "otro";
-            edad_objetivo_pension: number;
-            comentarios_cliente?: string;
-            observaciones_regimen?: string;
-            fecha_ultima_baja?: string;
-            ultimo_salario_cotizado?: number;
-            fecha_vencimiento_conservacion?: string;
-            /** @enum {string} */
-            tiene_conservacion_derechos: "si" | "no" | "requiere_validar";
-            tiempo_estimado_conservacion_meses?: number;
-            /** @enum {string} */
-            dentro_de_conservacion: "si" | "no" | "requiere_validar";
+            fecha_analisis?: string | null;
+            fecha_primera_cotizacion?: string | null;
+            cotizo_antes_julio_1997?: boolean | null;
+            /** @enum {string|null} */
+            tipo_pension_probable?: "cesantia" | "vejez" | "invalidez" | "viudez" | "otro" | null;
+            edad_objetivo_pension?: number | null;
+            comentarios_cliente?: string | null;
+            observaciones_regimen?: string | null;
+            fecha_ultima_baja?: string | null;
+            ultimo_salario_cotizado?: number | null;
+            fecha_vencimiento_conservacion?: string | null;
+            /** @enum {string|null} */
+            tiene_conservacion_derechos?: "si" | "no" | "requiere_validar" | null;
+            tiempo_estimado_conservacion_meses?: number | null;
+            /** @enum {string|null} */
+            dentro_de_conservacion?: "si" | "no" | "requiere_validar" | null;
             requiere_reactivacion?: boolean;
-            /** @enum {string} */
-            conviene_pensionar_ahora: "si" | "no" | "depende_escenario";
-            comentarios_conservacion?: string;
-            semanas_reconocidas_al_baja?: number;
+            /** @enum {string|null} */
+            conviene_pensionar_ahora?: "si" | "no" | "depende_escenario" | null;
+            comentarios_conservacion?: string | null;
+            semanas_reconocidas_al_baja?: number | null;
             semanas_descontadas?: number;
             semanas_reintegradas?: number;
-            semanas_efectivas_pension: number;
-            semanas_requeridas_pension?: number;
-            /** @enum {string} */
-            trabaja_cuenta_propia: "si" | "no" | "parcialmente";
-            actividad_economica?: string;
-            ingreso_mensual_aproximado?: number;
-            /** @enum {string} */
-            conclusion_modalidad_10: "aplica" | "no_aplica" | "aplica_con_restricciones" | "requiere_regularizacion" | "temporal" | "evaluar" | "requiere_contabilidad";
-            comentarios_modalidad_10?: string;
-            /** @enum {string} */
-            dado_de_baja_regimen_obligatorio: "si" | "no" | "requiere_validar";
-            /** @enum {string} */
-            conclusion_modalidad_40: "aplica" | "no_aplica" | "aplica_con_restricciones" | "requiere_regularizacion" | "temporal" | "evaluar" | "requiere_contabilidad";
-            salario_propuesto_m40?: number;
-            meses_propuestos_m40?: number;
+            semanas_efectivas_pension?: number | null;
+            semanas_requeridas_pension?: number | null;
+            /** @enum {string|null} */
+            trabaja_cuenta_propia?: "si" | "no" | "parcialmente" | null;
+            actividad_economica?: string | null;
+            ingreso_mensual_aproximado?: number | null;
+            /** @enum {string|null} */
+            conclusion_modalidad_10?: "aplica" | "no_aplica" | "aplica_con_restricciones" | "requiere_regularizacion" | "temporal" | "evaluar" | "requiere_contabilidad" | null;
+            comentarios_modalidad_10?: string | null;
+            /** @enum {string|null} */
+            dado_de_baja_regimen_obligatorio?: "si" | "no" | "requiere_validar" | null;
+            /** @enum {string|null} */
+            conclusion_modalidad_40?: "aplica" | "no_aplica" | "aplica_con_restricciones" | "requiere_regularizacion" | "temporal" | "evaluar" | "requiere_contabilidad" | null;
+            salario_propuesto_m40?: number | null;
+            meses_propuestos_m40?: number | null;
             evalua_retroactivo_m40?: boolean;
-            comentarios_modalidad_40?: string;
-            justificacion_estrategia: string;
-            siguiente_paso_sugerido?: string;
-            conclusion_financiera?: string;
-            firma_cliente_path?: string;
-            firma_asesor_path?: string;
-            fecha_firma?: string;
+            comentarios_modalidad_40?: string | null;
+            justificacion_estrategia?: string | null;
+            siguiente_paso_sugerido?: string | null;
+            conclusion_financiera?: string | null;
         };
         UpdateDiagnosticoEspecializadoDto: {
-            fecha_analisis?: string;
-            /** Format: uuid */
-            asesor_id?: string;
-            fecha_primera_cotizacion?: string;
-            cotizo_antes_julio_1997?: boolean;
-            /** @enum {string} */
-            tipo_pension_probable?: "cesantia" | "vejez" | "invalidez" | "viudez" | "otro";
-            edad_objetivo_pension?: number;
-            comentarios_cliente?: string;
-            observaciones_regimen?: string;
-            fecha_ultima_baja?: string;
-            ultimo_salario_cotizado?: number;
-            fecha_vencimiento_conservacion?: string;
-            /** @enum {string} */
-            tiene_conservacion_derechos?: "si" | "no" | "requiere_validar";
-            tiempo_estimado_conservacion_meses?: number;
-            /** @enum {string} */
-            dentro_de_conservacion?: "si" | "no" | "requiere_validar";
+            fecha_analisis?: string | null;
+            fecha_primera_cotizacion?: string | null;
+            cotizo_antes_julio_1997?: boolean | null;
+            /** @enum {string|null} */
+            tipo_pension_probable?: "cesantia" | "vejez" | "invalidez" | "viudez" | "otro" | null;
+            edad_objetivo_pension?: number | null;
+            comentarios_cliente?: string | null;
+            observaciones_regimen?: string | null;
+            fecha_ultima_baja?: string | null;
+            ultimo_salario_cotizado?: number | null;
+            fecha_vencimiento_conservacion?: string | null;
+            /** @enum {string|null} */
+            tiene_conservacion_derechos?: "si" | "no" | "requiere_validar" | null;
+            tiempo_estimado_conservacion_meses?: number | null;
+            /** @enum {string|null} */
+            dentro_de_conservacion?: "si" | "no" | "requiere_validar" | null;
             requiere_reactivacion?: boolean;
-            /** @enum {string} */
-            conviene_pensionar_ahora?: "si" | "no" | "depende_escenario";
-            comentarios_conservacion?: string;
-            semanas_reconocidas_al_baja?: number;
+            /** @enum {string|null} */
+            conviene_pensionar_ahora?: "si" | "no" | "depende_escenario" | null;
+            comentarios_conservacion?: string | null;
+            semanas_reconocidas_al_baja?: number | null;
             semanas_descontadas?: number;
             semanas_reintegradas?: number;
-            semanas_efectivas_pension?: number;
-            semanas_requeridas_pension?: number;
-            /** @enum {string} */
-            trabaja_cuenta_propia?: "si" | "no" | "parcialmente";
-            actividad_economica?: string;
-            ingreso_mensual_aproximado?: number;
-            /** @enum {string} */
-            conclusion_modalidad_10?: "aplica" | "no_aplica" | "aplica_con_restricciones" | "requiere_regularizacion" | "temporal" | "evaluar" | "requiere_contabilidad";
-            comentarios_modalidad_10?: string;
-            /** @enum {string} */
-            dado_de_baja_regimen_obligatorio?: "si" | "no" | "requiere_validar";
-            /** @enum {string} */
-            conclusion_modalidad_40?: "aplica" | "no_aplica" | "aplica_con_restricciones" | "requiere_regularizacion" | "temporal" | "evaluar" | "requiere_contabilidad";
-            salario_propuesto_m40?: number;
-            meses_propuestos_m40?: number;
+            semanas_efectivas_pension?: number | null;
+            semanas_requeridas_pension?: number | null;
+            /** @enum {string|null} */
+            trabaja_cuenta_propia?: "si" | "no" | "parcialmente" | null;
+            actividad_economica?: string | null;
+            ingreso_mensual_aproximado?: number | null;
+            /** @enum {string|null} */
+            conclusion_modalidad_10?: "aplica" | "no_aplica" | "aplica_con_restricciones" | "requiere_regularizacion" | "temporal" | "evaluar" | "requiere_contabilidad" | null;
+            comentarios_modalidad_10?: string | null;
+            /** @enum {string|null} */
+            dado_de_baja_regimen_obligatorio?: "si" | "no" | "requiere_validar" | null;
+            /** @enum {string|null} */
+            conclusion_modalidad_40?: "aplica" | "no_aplica" | "aplica_con_restricciones" | "requiere_regularizacion" | "temporal" | "evaluar" | "requiere_contabilidad" | null;
+            salario_propuesto_m40?: number | null;
+            meses_propuestos_m40?: number | null;
             evalua_retroactivo_m40?: boolean;
-            comentarios_modalidad_40?: string;
-            justificacion_estrategia?: string;
-            siguiente_paso_sugerido?: string;
-            conclusion_financiera?: string;
-            firma_cliente_path?: string;
-            firma_asesor_path?: string;
-            fecha_firma?: string;
+            comentarios_modalidad_40?: string | null;
+            justificacion_estrategia?: string | null;
+            siguiente_paso_sugerido?: string | null;
+            conclusion_financiera?: string | null;
         };
         AnalisisRecuperacionSemanas: {
             id: string;
@@ -1955,10 +2261,10 @@ export interface components {
             recargos_actualizaciones_estimadas: number | null;
             total_estimado_pagar: number | null;
             baja_por_mora_previa: boolean | null;
-            /** @enum {string} */
-            dentro_de_plazo_reingreso: "si" | "no" | "requiere_validar";
-            /** @enum {string} */
-            conclusion_retroactivo: "conviene" | "no_conviene" | "conviene_parcialmente" | "requiere_calculo_validacion";
+            /** @enum {string|null} */
+            dentro_de_plazo_reingreso: "si" | "no" | "requiere_validar" | null;
+            /** @enum {string|null} */
+            conclusion_retroactivo: "conviene" | "no_conviene" | "conviene_parcialmente" | "requiere_calculo_validacion" | null;
             comentarios: string | null;
         };
         CreateAnalisisModalidad40RetroactivoDto: {
@@ -1970,10 +2276,10 @@ export interface components {
             recargos_actualizaciones_estimadas?: number;
             total_estimado_pagar?: number;
             baja_por_mora_previa?: boolean;
-            /** @enum {string} */
-            dentro_de_plazo_reingreso: "si" | "no" | "requiere_validar";
-            /** @enum {string} */
-            conclusion_retroactivo: "conviene" | "no_conviene" | "conviene_parcialmente" | "requiere_calculo_validacion";
+            /** @enum {string|null} */
+            dentro_de_plazo_reingreso?: "si" | "no" | "requiere_validar" | null;
+            /** @enum {string|null} */
+            conclusion_retroactivo?: "conviene" | "no_conviene" | "conviene_parcialmente" | "requiere_calculo_validacion" | null;
             comentarios?: string;
         };
         EscenarioPension: {
@@ -1981,50 +2287,53 @@ export interface components {
             diagnostico_f1_id: string;
             nombre_escenario: string;
             orden: number;
-            semanas_proyectadas: number;
-            salario_promedio_proyectado: number;
+            semanas_proyectadas: number | null;
+            salario_promedio_proyectado: number | null;
             inversion_total_estimada: number;
-            pension_mensual_estimada: number;
-            incremento_mensual: number;
+            pension_mensual_estimada: number | null;
+            incremento_mensual: number | null;
             meses_recuperacion_inversion: number | null;
             beneficio_a_5_anios: number | null;
             beneficio_a_10_anios: number | null;
             beneficio_a_15_anios: number | null;
             salario_modalidad_40: number | null;
+            meses_modalidad_10: number | null;
             meses_modalidad_40: number | null;
             costo_mensual_estimado: number | null;
         };
         CreateEscenarioPensionDto: {
             nombre_escenario: string;
             orden: number;
-            semanas_proyectadas: number;
-            salario_promedio_proyectado: number;
+            semanas_proyectadas?: number | null;
+            salario_promedio_proyectado?: number | null;
             inversion_total_estimada?: number;
-            pension_mensual_estimada: number;
-            incremento_mensual: number;
-            meses_recuperacion_inversion?: number;
-            beneficio_a_5_anios?: number;
-            beneficio_a_10_anios?: number;
-            beneficio_a_15_anios?: number;
-            salario_modalidad_40?: number;
-            meses_modalidad_40?: number;
-            costo_mensual_estimado?: number;
+            pension_mensual_estimada?: number | null;
+            incremento_mensual?: number | null;
+            meses_recuperacion_inversion?: number | null;
+            beneficio_a_5_anios?: number | null;
+            beneficio_a_10_anios?: number | null;
+            beneficio_a_15_anios?: number | null;
+            salario_modalidad_40?: number | null;
+            meses_modalidad_10?: number | null;
+            meses_modalidad_40?: number | null;
+            costo_mensual_estimado?: number | null;
         };
         UpdateEscenarioPensionDto: {
             nombre_escenario?: string;
             orden?: number;
-            semanas_proyectadas?: number;
-            salario_promedio_proyectado?: number;
+            semanas_proyectadas?: number | null;
+            salario_promedio_proyectado?: number | null;
             inversion_total_estimada?: number;
-            pension_mensual_estimada?: number;
-            incremento_mensual?: number;
-            meses_recuperacion_inversion?: number;
-            beneficio_a_5_anios?: number;
-            beneficio_a_10_anios?: number;
-            beneficio_a_15_anios?: number;
-            salario_modalidad_40?: number;
-            meses_modalidad_40?: number;
-            costo_mensual_estimado?: number;
+            pension_mensual_estimada?: number | null;
+            incremento_mensual?: number | null;
+            meses_recuperacion_inversion?: number | null;
+            beneficio_a_5_anios?: number | null;
+            beneficio_a_10_anios?: number | null;
+            beneficio_a_15_anios?: number | null;
+            salario_modalidad_40?: number | null;
+            meses_modalidad_10?: number | null;
+            meses_modalidad_40?: number | null;
+            costo_mensual_estimado?: number | null;
         };
         PeriodoInconsistencia: {
             id: string;
@@ -2069,67 +2378,65 @@ export interface components {
         };
         CreatePlanAccionDto: {
             accion: string;
-            fecha_objetivo?: string;
+            fecha_objetivo?: string | null;
             /** @enum {string} */
-            estatus: "pendiente" | "en_proceso" | "hecho";
-            observaciones?: string;
+            estatus?: "pendiente" | "en_proceso" | "hecho";
+            observaciones?: string | null;
         };
         UpdatePlanAccionDto: {
             accion?: string;
-            fecha_objetivo?: string;
+            fecha_objetivo?: string | null;
             /** @enum {string} */
             estatus?: "pendiente" | "en_proceso" | "hecho";
-            observaciones?: string;
+            observaciones?: string | null;
         };
         SituacionPatrimonial: {
             id: string;
             diagnostico_f1_id: string;
-            saldo_cuenta_individual: number;
-            aportaciones_voluntarias: number;
-            ahorros_inversiones_adicionales: number;
-            bienes_patrimoniales: string;
-            creditos_deudas_vigentes: string;
-            ingreso_mensual: number;
-            otras_fuentes_ingreso: string;
-            ingreso_conyuge: number;
-            seguros: string;
-            /** @enum {string} */
-            estado_salud: "bueno" | "regular" | "malo";
-            padecimientos: string;
-            /** @enum {string} */
-            estado_civil: "soltero" | "casado" | "divorciado" | "viudo" | "concubinato";
+            saldo_cuenta_individual: number | null;
+            aportaciones_voluntarias: number | null;
+            ahorros_inversiones_adicionales: number | null;
+            bienes_patrimoniales: string | null;
+            creditos_deudas_vigentes: string | null;
+            ingreso_mensual: number | null;
+            otras_fuentes_ingreso: string | null;
+            ingreso_conyuge: number | null;
+            seguros: string | null;
+            /** @enum {string|null} */
+            estado_salud: "bueno" | "regular" | "malo" | null;
+            padecimientos: string | null;
+            /** @enum {string|null} */
+            estado_civil: "soltero" | "casado" | "divorciado" | "viudo" | "concubinato" | null;
             edad_conyuge: number | null;
             actividad_economica_conyuge: string | null;
         };
         CreateSituacionPatrimonialDto: {
-            saldo_cuenta_individual: number;
-            aportaciones_voluntarias: number;
-            ahorros_inversiones_adicionales: number;
-            bienes_patrimoniales: string;
-            creditos_deudas_vigentes: string;
-            ingreso_mensual: number;
-            otras_fuentes_ingreso: string;
-            ingreso_conyuge: number;
-            seguros: string;
-            /** @enum {string} */
-            estado_salud: "bueno" | "regular" | "malo";
-            padecimientos: string;
-            /** @enum {string} */
-            estado_civil: "soltero" | "casado" | "divorciado" | "viudo" | "concubinato";
-            edad_conyuge?: number;
-            actividad_economica_conyuge?: string;
+            saldo_cuenta_individual?: number | null;
+            aportaciones_voluntarias?: number | null;
+            ahorros_inversiones_adicionales?: number | null;
+            bienes_patrimoniales?: string | null;
+            creditos_deudas_vigentes?: string | null;
+            ingreso_mensual?: number | null;
+            otras_fuentes_ingreso?: string | null;
+            ingreso_conyuge?: number | null;
+            seguros?: string | null;
+            /** @enum {string|null} */
+            estado_salud?: "bueno" | "regular" | "malo" | null;
+            padecimientos?: string | null;
+            /** @enum {string|null} */
+            estado_civil?: "soltero" | "casado" | "divorciado" | "viudo" | "concubinato" | null;
+            edad_conyuge?: number | null;
+            actividad_economica_conyuge?: string | null;
         };
         SituacionPatrimonialHijos: {
             id: string;
             situacion_patrimonial_id: string;
-            numero_hijos: number;
             tiene_discapacidad: boolean;
             edad: number;
         };
         CreateSituacionPatrimonialHijosDto: {
-            numero_hijos?: number;
-            tiene_discapacidad?: boolean;
             edad: number;
+            tiene_discapacidad?: boolean;
         };
         EstrategiaRecomendadaTipo: {
             id: number;
@@ -2158,6 +2465,14 @@ export interface components {
         ObjetivoModalidad40: {
             id: number;
             nombre: string;
+        };
+        TipoDocumentoDiagnostico: {
+            id: number;
+            nombre: string;
+        };
+        ReemplazarListaDto: {
+            /** @description La lista completa: lo que no venga se borra. [] deja la lista vacía. */
+            items: Record<string, never>[];
         };
         EventoAgenda: {
             id: string;
@@ -4622,6 +4937,41 @@ export interface operations {
             };
         };
     };
+    DiagnosticosController_eliminarPeriodoInconsistencia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+                periodoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Periodo eliminado. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     DiagnosticosController_actualizarPeriodoInconsistencia: {
         parameters: {
             query?: never;
@@ -4719,6 +5069,41 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["PlanAccion"];
                 };
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_eliminarPlanAccion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+                planAccionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Acción eliminada. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Token ausente, vencido o inválido. */
             401: {
@@ -4868,6 +5253,44 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SituacionPatrimonialHijos"][];
                 };
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_guardarHijos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReemplazarListaDto"];
+            };
+        };
+        responses: {
+            /** @description La lista guardada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Token ausente, vencido o inválido. */
             401: {
@@ -5138,6 +5561,865 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ObjetivoModalidad40"][];
                 };
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_listarTiposDocumentoDiagnostico: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TipoDocumentoDiagnostico"][];
+                };
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_leerObjetivos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description La lista guardada, en el orden del catálogo o de captura. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_guardarObjetivos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReemplazarListaDto"];
+            };
+        };
+        responses: {
+            /** @description La lista guardada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_leerEstrategiasRecomendadas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description La lista guardada, en el orden del catálogo o de captura. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_guardarEstrategiasRecomendadas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReemplazarListaDto"];
+            };
+        };
+        responses: {
+            /** @description La lista guardada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_leerInconsistenciasGenerales: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description La lista guardada, en el orden del catálogo o de captura. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_guardarInconsistenciasGenerales: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReemplazarListaDto"];
+            };
+        };
+        responses: {
+            /** @description La lista guardada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_leerObjetivosModalidad10: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description La lista guardada, en el orden del catálogo o de captura. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_guardarObjetivosModalidad10: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReemplazarListaDto"];
+            };
+        };
+        responses: {
+            /** @description La lista guardada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_leerObjetivosModalidad40: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description La lista guardada, en el orden del catálogo o de captura. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_guardarObjetivosModalidad40: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReemplazarListaDto"];
+            };
+        };
+        responses: {
+            /** @description La lista guardada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_leerRecuperacionGestiones: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description La lista guardada, en el orden del catálogo o de captura. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_guardarRecuperacionGestiones: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReemplazarListaDto"];
+            };
+        };
+        responses: {
+            /** @description La lista guardada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_leerRecuperacionEvidencias: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description La lista guardada, en el orden del catálogo o de captura. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_guardarRecuperacionEvidencias: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReemplazarListaDto"];
+            };
+        };
+        responses: {
+            /** @description La lista guardada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_leerDocumentos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description La lista guardada, en el orden del catálogo o de captura. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_guardarDocumentos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReemplazarListaDto"];
+            };
+        };
+        responses: {
+            /** @description La lista guardada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_leerCriteriosModalidad10: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description La lista guardada, en el orden del catálogo o de captura. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_guardarCriteriosModalidad10: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReemplazarListaDto"];
+            };
+        };
+        responses: {
+            /** @description La lista guardada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_leerCriteriosModalidad40: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description La lista guardada, en el orden del catálogo o de captura. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_guardarCriteriosModalidad40: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReemplazarListaDto"];
+            };
+        };
+        responses: {
+            /** @description La lista guardada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_leerConvenienciaRetroactivo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description La lista guardada, en el orden del catálogo o de captura. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_guardarConvenienciaRetroactivo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReemplazarListaDto"];
+            };
+        };
+        responses: {
+            /** @description La lista guardada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token ausente, vencido o inválido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiagnosticosController_descargarPdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description El PDF del F1. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Token ausente, vencido o inválido. */
             401: {

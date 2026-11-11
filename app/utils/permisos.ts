@@ -24,6 +24,8 @@ const ACCIONES_POR_ROL = {
   'clientes.editar': ['asesor'],
   // Diagnóstico inicial F0: lo captura el Asesor y lo ve el Supervisor; el Auxiliar no puede leer historial ni objetivos.
   'f0.ver': ['asesor', 'supervisor'],
+  // Diagnóstico especializado F1: solo el Asesor del cliente (las rutas del backend son solo de su rol).
+  'f1.ver': ['asesor'],
   'clientes.reasignar': ['supervisor'],
   'etapas.cambiarEstatus': ['asesor'],
   'auxiliares.autorizar': ['asesor'],

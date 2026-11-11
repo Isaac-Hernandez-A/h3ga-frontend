@@ -116,11 +116,16 @@ function limpiarFiltros() {
   orden.value = 'reciente'
 }
 
-function ultimosDias() {
+function fechaUltimosDias() {
   const d = new Date()
   d.setDate(d.getDate() - DIAS_RECIENTES)
   const dos = (n: number) => String(n).padStart(2, '0')
-  registroDesde.value = `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`
+  return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`
+}
+// El botón se resalta mientras el filtro de fecha sea justo el de los últimos días.
+const ultimosDiasActivo = computed(() => registroDesde.value === fechaUltimosDias())
+function ultimosDias() {
+  registroDesde.value = fechaUltimosDias()
 }
 
 const claseCampo = 'rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm'
@@ -139,10 +144,10 @@ const claseCampo = 'rounded-lg border border-neutral-300 bg-white px-3 py-2 text
       </div>
       <div
         data-pendientes
-        class="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-5 py-3 shadow-sm"
+        class="flex h-11 items-center gap-2 rounded-xl border border-neutral-200 bg-white px-2 shadow-sm"
       >
-        <span class="flex size-14 items-center justify-center rounded-xl bg-amber-100 text-3xl font-semibold text-amber-700">{{ conPendientes }}</span>
-        <span class="text-neutral-700">Expedientes con pendientes</span>
+        <span class="flex size-8 items-center justify-center rounded-lg bg-amber-100 text-base font-semibold text-amber-700">{{ conPendientes }}</span>
+        <span class="pr-2 text-sm text-neutral-700">Expedientes con pendientes</span>
       </div>
     </div>
 
@@ -222,6 +227,8 @@ const claseCampo = 'rounded-lg border border-neutral-300 bg-white px-3 py-2 text
         color="neutral"
         variant="outline"
         data-accion="ultimos-dias"
+        :aria-pressed="ultimosDiasActivo"
+        :class="ultimosDiasActivo ? 'border-acento-500 bg-acento-100 font-semibold text-profundo-900 ring-1 ring-acento-500 hover:bg-acento-100' : ''"
         @click="ultimosDias"
       >
         Últimos {{ DIAS_RECIENTES }} días

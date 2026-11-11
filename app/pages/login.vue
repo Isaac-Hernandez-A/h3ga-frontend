@@ -48,7 +48,7 @@ async function entrar() {
     <img
       src="/img/logo-circular.png"
       alt="H3GA Seguros y Pensiones"
-      class="mx-auto mb-6 h-14 w-14 object-contain sm:mb-10 sm:h-[72px] sm:w-[72px] [@media(max-height:820px)]:mb-4 [@media(max-height:820px)]:h-12 [@media(max-height:820px)]:w-12 [@media(max-height:620px)]:mb-2 [@media(max-height:620px)]:h-9 [@media(max-height:620px)]:w-9"
+      class="mx-auto mb-6 size-20 shrink-0 object-contain sm:mb-10 [@media(max-height:820px)]:mb-4 [@media(max-height:620px)]:mb-2"
     >
 
     <h1 class="text-center font-display text-3xl font-semibold leading-tight text-profundo-900 sm:text-4xl [@media(max-height:820px)]:text-3xl [@media(max-height:620px)]:text-2xl">

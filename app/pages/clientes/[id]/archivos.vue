@@ -229,7 +229,7 @@ async function alSubirse(nuevo: DocumentoCliente) {
               variant="ghost"
               size="sm"
               icon="i-lucide-filter-x"
-              class="ml-auto"
+              class="whitespace-nowrap"
               data-accion="limpiar-filtros"
               :disabled="!hayFiltros"
               @click="limpiarFiltros"
