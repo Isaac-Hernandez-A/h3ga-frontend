@@ -114,7 +114,7 @@ async function confirmarReasignar() {
 
 <template>
   <section class="space-y-6">
-    <div class="flex flex-wrap items-start justify-between gap-4">
+    <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
         <h2 class="font-display text-3xl font-semibold text-profundo-700">
           Clientes
@@ -126,10 +126,10 @@ async function confirmarReasignar() {
       <div class="flex items-center gap-4">
         <div
           data-total-clientes
-          class="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-5 py-3 shadow-sm"
+          class="flex h-11 items-center gap-2 rounded-xl border border-neutral-200 bg-white px-2 shadow-sm"
         >
-          <span class="flex size-14 items-center justify-center rounded-xl bg-acento-100 text-3xl font-semibold text-acento-700">{{ clientes.length }}</span>
-          <span class="text-neutral-700">{{ clientes.length === 1 ? 'Cliente' : 'Clientes' }}</span>
+          <span class="flex size-8 items-center justify-center rounded-lg bg-acento-100 text-base font-semibold text-acento-700">{{ clientes.length }}</span>
+          <span class="pr-2 text-sm text-neutral-700">{{ clientes.length === 1 ? 'Cliente' : 'Clientes' }}</span>
         </div>
         <UButton
           v-if="puedeCrear"
@@ -278,13 +278,13 @@ async function confirmarReasignar() {
             </dd>
           </dl>
 
-          <div class="mt-auto flex gap-3 pt-4">
+          <div class="mt-auto flex flex-wrap gap-2 pt-4">
             <UButton
               :to="`/clientes/${cliente.id}`"
               data-accion="ver-detalles"
               trailing-icon="i-lucide-chevron-right"
               size="lg"
-              class="flex-1 justify-center whitespace-nowrap bg-acento-500 font-semibold text-profundo-900 shadow-md hover:bg-acento-400"
+              class="min-w-0 flex-1 justify-center whitespace-nowrap bg-acento-500 font-semibold text-profundo-900 shadow-md hover:bg-acento-400"
             >
               Ver detalles
             </UButton>
@@ -295,7 +295,7 @@ async function confirmarReasignar() {
               variant="outline"
               icon="i-lucide-folder"
               size="lg"
-              class="flex-1 justify-center whitespace-nowrap bg-white font-medium shadow-md"
+              class="min-w-0 flex-1 justify-center whitespace-nowrap bg-white font-medium shadow-md"
             >
               Ver archivos
             </UButton>

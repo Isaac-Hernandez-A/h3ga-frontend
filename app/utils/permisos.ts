@@ -21,6 +21,9 @@ const RUTAS_POR_ROL: Record<Rol, string[]> = {
 
 const ACCIONES_POR_ROL = {
   'clientes.crear': ['asesor'],
+  'clientes.editar': ['asesor'],
+  // Diagnóstico inicial F0: lo captura el Asesor y lo ve el Supervisor; el Auxiliar no puede leer historial ni objetivos.
+  'f0.ver': ['asesor', 'supervisor'],
   'clientes.reasignar': ['supervisor'],
   'etapas.cambiarEstatus': ['asesor'],
   'auxiliares.autorizar': ['asesor'],

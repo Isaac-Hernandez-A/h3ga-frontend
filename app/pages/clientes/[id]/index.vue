@@ -1,8 +1,12 @@
 <script setup lang="ts">
+import { puede } from '~/utils/permisos'
+
 definePageMeta({ titulo: 'Expediente del cliente' })
 
 const id = String(useRoute().params.id)
 const expediente = useExpediente(id)
+const sesion = useSessionStore()
+const verF0 = computed(() => (sesion.usuario ? puede(sesion.usuario.rol, 'f0.ver') : false))
 const { cliente, etapas, estatus, catalogos, usuarios, eventos, avisos, documentos, cargando, estado, asesorNombre, cargar, recargarEtapas } = expediente
 </script>
 
@@ -20,18 +24,32 @@ const { cliente, etapas, estatus, catalogos, usuarios, eventos, avisos, document
         />
         Regresar
       </NuxtLink>
-      <UButton
+      <div
         v-if="cliente"
-        :to="`/clientes/${id}/archivos`"
-        data-accion="ver-archivos"
-        color="neutral"
-        variant="outline"
-        icon="i-lucide-folder"
-        size="lg"
-        class="bg-white font-medium shadow-md"
+        class="flex flex-wrap items-center gap-3"
       >
-        Ver archivos
-      </UButton>
+        <UButton
+          v-if="verF0"
+          :to="`/clientes/${id}/f0`"
+          data-accion="ver-f0"
+          icon="i-lucide-clipboard-pen-line"
+          size="lg"
+          class="bg-profundo-500 font-medium text-white shadow-md hover:bg-profundo-600"
+        >
+          Diagnóstico inicial (F0)
+        </UButton>
+        <UButton
+          :to="`/clientes/${id}/archivos`"
+          data-accion="ver-archivos"
+          color="neutral"
+          variant="outline"
+          icon="i-lucide-folder"
+          size="lg"
+          class="bg-white font-medium shadow-md"
+        >
+          Ver archivos
+        </UButton>
+      </div>
     </div>
 
     <p

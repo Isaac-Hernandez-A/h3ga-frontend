@@ -254,6 +254,16 @@ describe('Expediente del cliente (ver detalles)', () => {
     expect(wrapper.find('a[data-accion="regresar"]').attributes('href')).toBe('/clientes')
   })
 
+  it('el enlace al Diagnóstico inicial F0 lo ven el Asesor y el Supervisor, pero no el Auxiliar', async () => {
+    for (const [rol, esperado] of [['asesor', true], ['supervisor', true], ['auxiliar', false]] as const) {
+      const { wrapper } = await abrir({ rol })
+      const enlace = wrapper.find('a[data-accion="ver-f0"]')
+      expect(enlace.exists(), rol).toBe(esperado)
+      if (esperado) expect(enlace.attributes('href')).toBe(`/clientes/${CLIENTE.id}/f0`)
+      wrapper.unmount()
+    }
+  })
+
   it('un 404 muestra "Cliente no encontrado" con el enlace para volver', async () => {
     const { wrapper } = await abrir({ fallaCliente: 404 })
 

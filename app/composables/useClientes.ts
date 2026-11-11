@@ -11,6 +11,7 @@ export function useClientes() {
     actualizar: (id: string, datos: ActualizarCliente) => api.patch<Cliente>(`/clientes/${id}`, datos),
     // Solo el Supervisor.
     reasignar: (id: string, asesorId: string) => api.patch<Cliente>(`/clientes/${id}/asesor`, { asesor_id: asesorId }),
+    regimenes: () => api.get<CatalogoItem[]>('/catalogos/regimenes'),
     async catalogos(): Promise<CatalogosCliente> {
       const [regimenes, leyesProbables, afores] = await Promise.all([
         api.get<CatalogoItem[]>('/catalogos/regimenes'),

@@ -3,9 +3,18 @@ import type { FormError } from '@nuxt/ui'
 import type { ActualizarCliente, CatalogosCliente, Cliente, CrearCliente } from '~/types/cliente'
 import { ApiError } from '~/utils/api-error'
 import { mensajeDeCampo } from '~/utils/errores-api'
-import { hoyISO } from '~/utils/fechas'
+import { edadDesde, hoyISO } from '~/utils/fechas'
 
-const props = defineProps<{ cliente: Cliente | null, catalogos: CatalogosCliente }>()
+type Seccion = 'personales' | 'contacto' | 'previsionales' | 'objetivo'
+
+// `secciones` permite usar el formulario por partes (los pasos del F0): solo se muestran, validan y envían
+// los campos de esas secciones. `sinBotones` deja que quien lo usa ponga sus propios botones y llame a enviar().
+const props = withDefaults(defineProps<{
+  cliente: Cliente | null
+  catalogos: CatalogosCliente
+  secciones?: Seccion[]
+  sinBotones?: boolean
+}>(), { secciones: () => ['personales', 'contacto', 'previsionales', 'objetivo'], sinBotones: false })
 const emit = defineEmits<{ guardado: [cliente: Cliente], cancelar: [] }>()
 
 const api = useClientes()
@@ -65,6 +74,21 @@ const estado = reactive<Record<string, string | number>>({
   observaciones_generales: c?.observaciones_generales ?? '',
 })
 const CAMPOS = Object.keys(estado)
+
+const CAMPOS_DE_SECCION: Record<Seccion, string[]> = {
+  personales: ['nombre', 'apellido_paterno', 'apellido_materno', 'fecha_nacimiento', 'sexo', 'estado_civil', 'dependientes_economicos', 'curp', 'rfc', 'nss', 'ine'],
+  contacto: ['telefono', 'correo_electronico', 'fecha_ingreso', 'domicilio', 'estado', 'referido_por', 'ocupacion'],
+  previsionales: ['regimen_id', 'ley_probable_id', 'afore_id', 'semanas_imss_reconocidas', 'semanas_a_recuperar', 'subdelegacion_imss_probable', 'tiene_issste', 'cambio_afore', 'requiere_contadora'],
+  objetivo: ['objetivo_cliente', 'observaciones_generales'],
+}
+const camposActivos = computed(() => new Set(props.secciones.flatMap(seccion => CAMPOS_DE_SECCION[seccion])))
+const activa = (seccion: Seccion) => props.secciones.includes(seccion)
+
+// La edad se calcula con la fecha de nacimiento: no se captura.
+const edad = computed(() => {
+  const nacimiento = String(estado.fecha_nacimiento ?? '')
+  return /^\d{4}-\d{2}-\d{2}$/.test(nacimiento) ? String(edadDesde(nacimiento)) : ''
+})
 const texto = (campo: string) => String(estado[campo] ?? '').trim()
 
 function validar(): FormError[] {
@@ -98,7 +122,7 @@ function validar(): FormError[] {
   if (texto('semanas_a_recuperar') && !ENTERO.test(texto('semanas_a_recuperar'))) {
     errores.push({ name: 'semanas_a_recuperar', message: 'Debe ser un número entero de 0 o más' })
   }
-  return errores
+  return errores.filter(e => e.name && camposActivos.value.has(e.name))
 }
 
 function cuerpo(): CrearCliente {
@@ -135,10 +159,11 @@ function cuerpo(): CrearCliente {
   if (texto('ine')) datos.ine = texto('ine')
   if (texto('ocupacion')) datos.ocupacion = texto('ocupacion')
   if (texto('semanas_a_recuperar')) datos.semanas_a_recuperar = Number(texto('semanas_a_recuperar'))
-  return datos
+  // Guardado parcial: solo viajan los campos de las secciones que muestra este formulario.
+  return Object.fromEntries(Object.entries(datos).filter(([campo]) => camposActivos.value.has(campo))) as CrearCliente
 }
 
-async function guardar() {
+async function guardar(): Promise<boolean> {
   errorGeneral.value = null
   enviando.value = true
   try {
@@ -146,6 +171,7 @@ async function guardar() {
       ? await api.actualizar(props.cliente.id, cuerpo() as ActualizarCliente)
       : await api.crear(cuerpo())
     emit('guardado', guardado)
+    return true
   }
   catch (error) {
     if (!(error instanceof ApiError)) throw error
@@ -163,11 +189,24 @@ async function guardar() {
     else if (error.status !== 0) {
       errorGeneral.value = 'No se pudo guardar. Inténtalo de nuevo.'
     }
+    return false
   }
   finally {
     enviando.value = false
   }
 }
+
+// Para quien pone sus propios botones (los pasos del F0): valida y guarda; true si quedó guardado.
+async function enviar(): Promise<boolean> {
+  try {
+    await formulario.value?.validate()
+  }
+  catch {
+    return false
+  }
+  return guardar()
+}
+defineExpose({ enviar })
 
 const claseSelect = 'w-full rounded-lg border border-marca-200 bg-white px-3 py-2.5 text-base text-neutral-900 focus:outline-2 focus:outline-marca-600'
 const campo = 'w-full'
@@ -182,7 +221,10 @@ const campo = 'w-full'
     class="space-y-8"
     @submit="guardar"
   >
-    <fieldset class="space-y-4">
+    <fieldset
+      v-if="activa('personales')"
+      class="space-y-4"
+    >
       <legend class="mb-2 font-display text-lg font-semibold text-profundo-900">
         Datos personales
       </legend>
@@ -197,9 +239,12 @@ const campo = 'w-full'
           <UInput v-model="estado.apellido_materno" name="apellido_materno" autocomplete="off" :class="campo" />
         </UFormField>
       </div>
-      <div class="grid gap-4 md:grid-cols-4">
+      <div class="grid gap-4 md:grid-cols-5">
         <UFormField label="Fecha de nacimiento" name="fecha_nacimiento" data-campo="fecha_nacimiento">
           <UInput v-model="estado.fecha_nacimiento" name="fecha_nacimiento" type="date" :class="campo" />
+        </UFormField>
+        <UFormField label="Edad" hint="Calculada" data-campo="edad">
+          <UInput :model-value="edad" name="edad" readonly tabindex="-1" :class="campo" />
         </UFormField>
         <UFormField label="Sexo" name="sexo" data-campo="sexo">
           <select v-model="estado.sexo" name="sexo" :class="claseSelect">
@@ -238,7 +283,10 @@ const campo = 'w-full'
       </div>
     </fieldset>
 
-    <fieldset class="space-y-4">
+    <fieldset
+      v-if="activa('contacto')"
+      class="space-y-4"
+    >
       <legend class="mb-2 font-display text-lg font-semibold text-profundo-900">
         Contacto y registro
       </legend>
@@ -271,7 +319,10 @@ const campo = 'w-full'
       </div>
     </fieldset>
 
-    <fieldset class="space-y-4">
+    <fieldset
+      v-if="activa('previsionales')"
+      class="space-y-4"
+    >
       <legend class="mb-2 font-display text-lg font-semibold text-profundo-900">
         Datos previsionales
       </legend>
@@ -343,7 +394,10 @@ const campo = 'w-full'
       </div>
     </fieldset>
 
-    <fieldset class="space-y-4">
+    <fieldset
+      v-if="activa('objetivo')"
+      class="space-y-4"
+    >
       <legend class="mb-2 font-display text-lg font-semibold text-profundo-900">
         Objetivo
       </legend>
@@ -366,7 +420,10 @@ const campo = 'w-full'
       {{ errorGeneral }}
     </p>
 
-    <div class="flex justify-end gap-3 border-t border-neutral-200 pt-4">
+    <div
+      v-if="!sinBotones"
+      class="flex justify-end gap-3 border-t border-neutral-200 pt-4"
+    >
       <UButton type="button" color="neutral" variant="outline" data-accion="cancelar" @click="emit('cancelar')">
         Cancelar
       </UButton>

@@ -145,7 +145,7 @@ const claseEnlace = (ruta: string) => [
         <div class="flex min-w-0 items-center gap-3">
           <button
             type="button"
-            class="rounded-md p-1.5 text-profundo-500 hover:bg-neutral-100"
+            class="inline-flex shrink-0 items-center justify-center rounded-md p-1.5 text-profundo-500 hover:bg-neutral-100"
             :aria-label="contraido ? 'Expandir menú' : 'Contraer menú'"
             :aria-expanded="!contraido"
             @click="contraido = !contraido"
@@ -155,7 +155,7 @@ const claseEnlace = (ruta: string) => [
               class="size-6"
             />
           </button>
-          <h1 class="truncate font-display text-2xl font-semibold text-profundo-900">
+          <h1 class="truncate font-display text-2xl font-semibold leading-none text-profundo-900">
             {{ titulo }}
           </h1>
         </div>

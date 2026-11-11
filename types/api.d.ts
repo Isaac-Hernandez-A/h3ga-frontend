@@ -1563,19 +1563,33 @@ export interface components {
             activo?: boolean;
         };
         InformacionIssste: {
+            /** @example 18.5 */
+            anios_laborados: number | null;
             id: string;
             historial_laboral_id: string;
             nss_issste: string;
             regimen_pensionario: string;
-            anios_laborados: number | null;
             activo: boolean;
         };
         CreateInformacionIsssteDto: {
-            /** Format: uuid */
-            id: string;
+            /**
+             * Format: uuid
+             * @description Opcional. Si la información ISSSTE ya existe se conserva su id; si no, se usa este o se genera uno.
+             */
+            id?: string;
+            /** @example 12345678901 */
             nss_issste: string;
+            /** @example Décimo transitorio */
             regimen_pensionario: string;
-            anios_laborados?: number;
+            /**
+             * @description Años laborados (NUMERIC(5,2)): de 0 a 999.99, máximo 2 decimales.
+             * @example 18.5
+             */
+            anios_laborados?: number | null;
+            /**
+             * @description Por omisión true.
+             * @default true
+             */
             activo: boolean;
         };
         ClienteObjetivoEspecifico: {
@@ -1725,11 +1739,11 @@ export interface components {
             dato_correcto?: string;
         };
         UpdateCorreccionClienteDto: {
-            tipo_correccion_id?: number;
-            observaciones?: string;
-            tiempo_promedio?: string;
-            dato_actual?: string;
-            dato_correcto?: string;
+            observaciones?: string | null;
+            tiempo_promedio?: string | null;
+            dato_actual?: string | null;
+            /** @description En los tipos que modifican el expediente (CURP, RFC, nacimiento, sexo, nombre) es obligatorio y no puede borrarse. */
+            dato_correcto?: string | null;
         };
         UnificacionNssDetalle: {
             id: string;
@@ -3015,6 +3029,13 @@ export interface operations {
                     "application/json": components["schemas"]["InformacionIssste"];
                 };
             };
+            /** @description Cuerpo inválido (nss, régimen o años fuera de rango). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Token ausente, vencido o inválido. */
             401: {
                 headers: {
@@ -3024,6 +3045,13 @@ export interface operations {
             };
             /** @description El rol del usuario no tiene permiso en esta ruta. */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El cliente no tiene historial laboral, o el id ya es de otra fila. */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3897,6 +3925,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description No existe o es de otro cliente. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     TramitesController_actualizarCorreccion: {
@@ -3923,6 +3958,13 @@ export interface operations {
                     "application/json": components["schemas"]["CorreccionCliente"];
                 };
             };
+            /** @description Cuerpo inválido o dato_correcto inválido para el tipo. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Token ausente, vencido o inválido. */
             401: {
                 headers: {
@@ -3932,6 +3974,13 @@ export interface operations {
             };
             /** @description El rol del usuario no tiene permiso en esta ruta. */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No existe o es de otro cliente. */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
