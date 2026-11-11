@@ -113,7 +113,8 @@ export function useApi() {
     document.body.appendChild(enlace)
     enlace.click()
     enlace.remove()
-    URL.revokeObjectURL(url)
+    // Se libera con un pequeño retraso: algunos navegadores cancelan la descarga si se revoca de inmediato.
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
     return nombre
   }
 

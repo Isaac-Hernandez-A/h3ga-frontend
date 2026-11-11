@@ -24,6 +24,7 @@ const ACCIONES_POR_ROL = {
   'clientes.reasignar': ['supervisor'],
   'etapas.cambiarEstatus': ['asesor'],
   'auxiliares.autorizar': ['asesor'],
+  'documentos.subir': ['asesor', 'auxiliar'],
   'documentos.revisar': ['auxiliar', 'supervisor'],
   'agenda.escribir': ['asesor'],
   'reportes.ver': ['asesor', 'supervisor'],

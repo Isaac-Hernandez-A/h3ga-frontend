@@ -33,7 +33,7 @@ const claseEnlace = (ruta: string) => [
 </script>
 
 <template>
-  <div class="flex min-h-dvh bg-neutral-50">
+  <div class="flex min-h-dvh bg-neutral-100">
     <aside
       class="sticky top-0 flex h-dvh shrink-0 flex-col bg-profundo-500 py-5 text-neutral-200 transition-[width] duration-200"
       :class="contraido ? 'w-[88px] items-center px-3' : 'w-[280px] px-5'"
