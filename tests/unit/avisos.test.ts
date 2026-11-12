@@ -8,7 +8,7 @@ import { useAvisos } from '~/composables/useAvisos'
 import { textoVencimientoAviso } from '~/utils/avisos'
 import type { Rol } from '~/types/sesion'
 import { SESION_API, errorHttp, stubFetch } from './ayudas'
-import { CLIENTES, USUARIOS_SUPERVISOR } from './clientes-datos'
+import { CLIENTES } from './clientes-datos'
 import { enDiasISO } from './expediente-datos'
 
 const toastMock = vi.hoisted(() => vi.fn())
@@ -31,32 +31,23 @@ describe('textoVencimientoAviso', () => {
 })
 
 const [C1, C2, C3, C4] = CLIENTES.map(c => c.id) as [string, string, string, string]
-const NOMBRES = ['Diagnóstico inicial', 'Diagnóstico especializado', 'Corrección de datos personales', 'Unificación de NSS']
-function etapasDe(clienteId: string, paso: number, fecha: string, accion: string, avance: number) {
-  const etapas = Array.from({ length: 16 }, (_, p) => ({
-    numero_paso: p, nombre: NOMBRES[p] ?? `Etapa ${p}`, id: `${clienteId}-e${p}`, cliente_id: clienteId, etapa_id: p + 1, estatus_id: 2, avance_porcentaje: 10,
-    accion_a_realizar: null, fecha_compromiso: null, fecha_completada: null, reactivado_en: null, creado_el: '2026-01-01T00:00:00.000Z', actualizado_el: '2026-11-01T00:00:00.000Z', motivo_rechazo: null,
-  }))
-  etapas[paso] = { ...etapas[paso]!, estatus_id: 4, avance_porcentaje: avance, fecha_compromiso: fecha, accion_a_realizar: accion }
-  return { avance_global: 10, etapas }
-}
-const ETAPAS: Record<string, ReturnType<typeof etapasDe>> = {
-  [C1]: etapasDe(C1, 1, enDiasISO(0), 'Entregar dictamen técnico firmado al cliente', 60),
-  [C3]: etapasDe(C3, 2, enDiasISO(-3), 'Corregir la CURP', 30),
-  [C4]: etapasDe(C4, 3, enDiasISO(4), 'Reunir los NSS', 20),
-  [C2]: etapasDe(C2, 0, enDiasISO(10), 'x', 10),
-}
-const EVENTOS = [
-  { id: 'ev000001-0000-4000-8000-000000000001', asesor_id: 'a', cliente_id: C2, fecha: enDiasISO(1), hora: '10:30:00', motivo: 'Recibir acta de nacimiento', estatus: 'pendiente' },
-  { id: 'ev000002-0000-4000-8000-000000000002', asesor_id: 'a', cliente_id: C1, fecha: enDiasISO(-1), hora: '09:00:00', motivo: 'Cita ya atendida', estatus: 'pendiente' },
-]
-const aviso = (id: string, base: Record<string, unknown>) => ({ id: `a000000${id}-0000-4000-8000-000000000000`, atendido: false, atendido_por: null, fecha_atencion: null, fecha_alerta: '2026-11-10T06:00:00.000Z', etapa_tramite_id: null, evento_id: null, ...base })
+const NOMBRE = (id: string) => { const c = CLIENTES.find(x => x.id === id)!; return [c.nombre, c.apellido_paterno, c.apellido_materno].filter(Boolean).join(' ') }
+// El backend entrega cada aviso con los datos de su etapa o cita (cliente, título, descripción, fecha, avance, asesor).
+const aviso = (id: string, clienteId: string, base: Record<string, unknown>) => ({
+  id: `a000000${id}-0000-4000-8000-000000000000`, atendido: false, atendido_por: null, fecha_atencion: null, fecha_alerta: '2026-11-10T06:00:00.000Z',
+  etapa_tramite_id: null, evento_id: null, cliente_id: clienteId, cliente_nombre: NOMBRE(clienteId), asesor_id: CLIENTES.find(c => c.id === clienteId)!.asesor_id,
+  asesor_nombre: 'Ana Pérez', hora: null, numero_paso: null, avance_porcentaje: null, estatus_id: null, ...base,
+})
+const tramite = (id: string, clienteId: string, titulo: string, descripcion: string, dias: number, avance: number, base: Record<string, unknown> = {}) =>
+  aviso(id, clienteId, { tipo: 'tramite', etapa_tramite_id: `et-${id}`, titulo, descripcion, fecha_compromiso: enDiasISO(dias), numero_paso: 1, avance_porcentaje: avance, estatus_id: 4, ...base })
+const cita = (id: string, clienteId: string, motivo: string, dias: number, base: Record<string, unknown> = {}) =>
+  aviso(id, clienteId, { tipo: 'cita', evento_id: `ev-${id}`, titulo: 'Cita programada', descripcion: motivo, fecha_compromiso: enDiasISO(dias), hora: '10:30:00', ...base })
 const AVISOS = [
-  aviso('1', { tipo: 'tramite', etapa_tramite_id: `${C1}-e1` }),
-  aviso('2', { tipo: 'cita', evento_id: EVENTOS[0]!.id }),
-  aviso('3', { tipo: 'tramite', etapa_tramite_id: `${C3}-e2` }),
-  aviso('4', { tipo: 'cita', evento_id: EVENTOS[1]!.id, atendido: true, atendido_por: SESION_API.usuario.id, fecha_atencion: '2026-11-11T16:45:00.000Z' }),
-  aviso('5', { tipo: 'tramite', etapa_tramite_id: `${C4}-e3` }),
+  tramite('1', C1, 'Diagnóstico especializado', 'Entregar dictamen técnico firmado al cliente', 0, 60),
+  cita('2', C2, 'Recibir acta de nacimiento', 1),
+  tramite('3', C3, 'Corrección de datos personales', 'Corregir la CURP', -3, 30),
+  cita('4', C1, 'Cita ya atendida', -1, { atendido: true, atendido_por: SESION_API.usuario.id, fecha_atencion: '2026-11-11T16:45:00.000Z' }),
+  tramite('5', C4, 'Unificación de NSS', 'Reunir los NSS', 4, 20),
 ]
 const ID = (n: number) => `a000000${n}-0000-4000-8000-000000000000`
 
@@ -74,11 +65,7 @@ function api(rol: Rol = 'asesor', avisos: unknown[] = AVISOS) {
     if (atender && method === 'PATCH') {
       return Promise.resolve({ ...Object.assign(lista.find(a => a.id === atender[1])!, { atendido: true, atendido_por: SESION_API.usuario.id, fecha_atencion: '2026-11-12T15:00:00.000Z' }) })
     }
-    if (r === '/agenda') return Promise.resolve(EVENTOS)
-    if (r === '/clientes') return Promise.resolve(CLIENTES)
-    const etapas = r.match(/^\/clientes\/([^/]+)\/etapas$/)
-    if (etapas) return Promise.resolve(ETAPAS[etapas[1]!])
-    if (r === '/usuarios') return rol === 'supervisor' ? Promise.resolve(USUARIOS_SUPERVISOR) : Promise.reject(errorHttp(403, { message: 'No' }))
+    // Nada más: los avisos ya traen cliente, título, fecha, avance y asesor.
     return Promise.reject(errorHttp(404, { message: `sin simular: ${method} ${r}` }))
   })
 }
@@ -238,13 +225,17 @@ describe('Centro de avisos', () => {
     }
   })
 
-  it('el Supervisor ve el asesor del cliente; el Auxiliar no (no puede leer los usuarios)', async () => {
-    const sup = await abrir('supervisor')
-    // El primer aviso es de José Ángel Núñez (asesor A: Ana Pérez)
-    expect(sup.wrapper.find('[data-detalle] [data-asesor]').text()).toContain('Ana Pérez')
-    sup.wrapper.unmount()
-    const aux = await abrir('auxiliar')
-    expect(aux.wrapper.find('[data-detalle] [data-asesor]').exists()).toBe(false)
+  it('los tres roles ven el asesor del cliente (viene en el aviso, sin leer los usuarios)', async () => {
+    for (const rol of ['asesor', 'supervisor', 'auxiliar'] as Rol[]) {
+      const { wrapper } = await abrir(rol)
+      expect(wrapper.find('[data-detalle] [data-asesor]').text(), rol).toContain('Ana Pérez')
+      wrapper.unmount()
+    }
+  })
+
+  it('solo pide GET /avisos: ya no lee las etapas de cada cliente, la agenda, los clientes ni los usuarios', async () => {
+    const { fetchMock } = await abrir('supervisor')
+    expect((fetchMock.mock.calls as Llamada[]).filter(([r]) => r !== '/auth/login').map(([r, o]) => `${o.method} ${r}`)).toEqual(['GET /avisos'])
   })
 
   it('sin avisos lo dice', async () => {
