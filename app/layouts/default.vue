@@ -5,6 +5,16 @@ const sesion = useSessionStore()
 const route = useRoute()
 const contraido = ref(false)
 
+// Por debajo de `lg` (1024 px) el menú se contrae solo para dejar espacio al contenido;
+// al volver a una pantalla ancha se expande. El botón del encabezado sigue funcionando.
+onMounted(() => {
+  const pantallaChica = window.matchMedia('(max-width: 1023.98px)')
+  const ajustar = (e: { matches: boolean }) => { contraido.value = e.matches }
+  ajustar(pantallaChica)
+  pantallaChica.addEventListener('change', ajustar)
+  onBeforeUnmount(() => pantallaChica.removeEventListener('change', ajustar))
+})
+
 const entradas = computed(() => (sesion.usuario ? menuPara(sesion.usuario.rol) : []))
 const ajustes = computed(() => entradas.value.find(e => e.seccion === SECCION_SISTEMA))
 

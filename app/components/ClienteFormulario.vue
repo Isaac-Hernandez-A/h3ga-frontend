@@ -228,7 +228,7 @@ const campo = 'w-full'
       <legend class="mb-2 font-display text-lg font-semibold text-profundo-900">
         Datos personales
       </legend>
-      <div class="grid gap-4 md:grid-cols-3">
+      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <UFormField label="Nombre(s)" name="nombre" data-campo="nombre">
           <UInput v-model="estado.nombre" name="nombre" autocomplete="off" :class="campo" />
         </UFormField>
@@ -239,7 +239,7 @@ const campo = 'w-full'
           <UInput v-model="estado.apellido_materno" name="apellido_materno" autocomplete="off" :class="campo" />
         </UFormField>
       </div>
-      <div class="grid gap-4 md:grid-cols-5">
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
         <UFormField label="Fecha de nacimiento" name="fecha_nacimiento" data-campo="fecha_nacimiento">
           <UInput v-model="estado.fecha_nacimiento" name="fecha_nacimiento" type="date" :class="campo" />
         </UFormField>
@@ -267,7 +267,7 @@ const campo = 'w-full'
           <UInput v-model="estado.dependientes_economicos" name="dependientes_economicos" inputmode="numeric" :class="campo" />
         </UFormField>
       </div>
-      <div class="grid gap-4 md:grid-cols-4">
+      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <UFormField label="CURP" name="curp" data-campo="curp">
           <UInput v-model="estado.curp" name="curp" autocomplete="off" maxlength="18" class="w-full uppercase" />
         </UFormField>
@@ -290,7 +290,7 @@ const campo = 'w-full'
       <legend class="mb-2 font-display text-lg font-semibold text-profundo-900">
         Contacto y registro
       </legend>
-      <div class="grid gap-4 md:grid-cols-3">
+      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <UFormField label="Teléfono" name="telefono" data-campo="telefono">
           <UInput v-model="estado.telefono" name="telefono" type="tel" autocomplete="off" :class="campo" />
         </UFormField>
@@ -301,7 +301,7 @@ const campo = 'w-full'
           <UInput v-model="estado.fecha_ingreso" name="fecha_ingreso" type="date" :class="campo" />
         </UFormField>
       </div>
-      <div class="grid gap-4 md:grid-cols-3">
+      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <UFormField label="Domicilio" name="domicilio" data-campo="domicilio" class="md:col-span-2">
           <UInput v-model="estado.domicilio" name="domicilio" autocomplete="off" :class="campo" />
         </UFormField>
@@ -326,7 +326,7 @@ const campo = 'w-full'
       <legend class="mb-2 font-display text-lg font-semibold text-profundo-900">
         Datos previsionales
       </legend>
-      <div class="grid gap-4 md:grid-cols-3">
+      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <UFormField label="Régimen" name="regimen_id" data-campo="regimen_id">
           <select v-model.number="estado.regimen_id" name="regimen_id" :class="claseSelect">
             <option value="">
@@ -358,7 +358,7 @@ const campo = 'w-full'
           </select>
         </UFormField>
       </div>
-      <div class="grid gap-4 md:grid-cols-3">
+      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <UFormField label="Semanas IMSS reconocidas" name="semanas_imss_reconocidas" data-campo="semanas_imss_reconocidas">
           <UInput v-model="estado.semanas_imss_reconocidas" name="semanas_imss_reconocidas" inputmode="numeric" :class="campo" />
         </UFormField>
@@ -369,7 +369,7 @@ const campo = 'w-full'
           <UInput v-model="estado.subdelegacion_imss_probable" name="subdelegacion_imss_probable" autocomplete="off" :class="campo" />
         </UFormField>
       </div>
-      <div class="grid gap-4 md:grid-cols-3">
+      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <UFormField label="¿Tiene ISSSTE?" name="tiene_issste" data-campo="tiene_issste">
           <select v-model="estado.tiene_issste" name="tiene_issste" :class="claseSelect">
             <option v-for="o in SI_NO" :key="o.valor" :value="o.valor">

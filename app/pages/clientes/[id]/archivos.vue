@@ -172,7 +172,7 @@ async function alSubirse(nuevo: DocumentoCliente) {
 
 <template>
   <section class="space-y-5">
-    <div class="flex items-center justify-between gap-4">
+    <div class="flex flex-wrap items-center justify-between gap-4">
       <NuxtLink
         :to="`/clientes/${id}`"
         data-accion="regresar"
