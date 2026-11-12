@@ -1,19 +1,14 @@
 <script setup lang="ts">
-import type { Cliente } from '~/types/cliente'
-import type { DocumentoCliente } from '~/types/expediente'
-import {
-  accionesDelMes, cargaPorAsesor, contarPorEtapa, detenidos as calcularDetenidos, documentosPendientes, documentosPorEstatus, esActivo,
-  etapaActual, fechaLarga, nombreCliente, porGrupo, TOTAL_ETAPAS, textoVencimiento, type EstadoAccion,
-} from '~/utils/dashboard'
+import type { DocumentoPendiente } from '~/types/dashboard'
+import { fechaLarga, iniciales, porGrupo, TOTAL_ETAPAS, textoVencimiento, type EstadoAccion } from '~/utils/dashboard'
 import { fechaLocalISO, formatearFechaCorta, hoyISO } from '~/utils/fechas'
-import { ROL_ID } from '~/utils/roles'
 
 definePageMeta({ titulo: 'Dashboard' })
 
 const MAX_FILAS = 8
 
 const sesion = useSessionStore()
-const { registros, usuarios, cargando, fallo, cargar, nombreEstatus, nombreTipo, nombreAsesor } = useDashboard()
+const { datos, cargando, fallo, cargar } = useDashboard()
 const hoy = hoyISO()
 onMounted(cargar)
 
@@ -23,25 +18,33 @@ const esAuxiliar = computed(() => rol.value === 'auxiliar')
 const esSupervisor = computed(() => rol.value === 'supervisor')
 const nombrePila = computed(() => sesion.usuario?.nombre.split(' ')[0] ?? '')
 
-const activos = computed(() => registros.value.filter(r => esActivo(r.etapas)))
-const acciones = computed(() => accionesDelMes(registros.value, hoy))
-const accionesProximas = computed(() => acciones.value.filter(a => a.estado === 'proxima').length)
-const pendientes = computed(() => documentosPendientes(registros.value, esAuxiliar.value))
-const sinAvance = computed(() => calcularDetenidos(registros.value, hoy))
-const carga = computed(() => cargaPorAsesor(registros.value, hoy))
-// Asesores con acceso (usuarios activos con rol Asesor); solo el Supervisor puede leer esa lista.
-const asesoresActivos = computed(() => usuarios.value.filter(u => u.rol_id === ROL_ID.asesor && u.activo).length)
+// Todo viene calculado por el backend (con el alcance del rol): aquí solo se presenta.
+const resumen = computed(() => datos.value?.resumen)
+const activos = computed(() => resumen.value?.clientes_activos ?? 0)
+const asesoresActivos = computed(() => resumen.value?.asesores_activos ?? 0)
+const accionesProximas = computed(() => resumen.value?.acciones_proximas_mes ?? 0)
+const detenidosTotal = computed(() => resumen.value?.clientes_avance_detenido ?? 0)
+const acciones = computed(() => datos.value?.acciones_del_mes ?? [])
+const sinAvance = computed(() => datos.value?.clientes_detenidos ?? [])
+const carga = computed(() => {
+  const filas = datos.value?.carga_por_asesor ?? []
+  const suma = (k: 'clientes_activos' | 'clientes_detenidos' | 'clientes_pensionados') => filas.reduce((a, f) => a + f[k], 0)
+  return { filas, total: { activos: suma('clientes_activos'), detenidos: suma('clientes_detenidos'), pensionados: suma('clientes_pensionados') } }
+})
+
+// El Asesor solo ve los documentos por confirmar; el Auxiliar también los "Con observaciones".
+const pendientes = computed(() => (datos.value?.documentos_pendientes ?? []).filter(d => esAuxiliar.value || d.estatus === 'por_confirmar'))
+const totalPendientes = computed(() => (resumen.value?.documentos_por_confirmar ?? 0) + (esAuxiliar.value ? (resumen.value?.documentos_con_observaciones ?? 0) : 0))
 
 // Clientes por etapa: una barra por cada una de las 16 etapas (aunque tenga 0) y la dona por grupo.
-const nombresEtapas = computed(() => {
-  const con = registros.value.find(r => r.etapas.length > 0)
-  return Array.from({ length: TOTAL_ETAPAS }, (_, p) => con?.etapas.find(e => e.numero_paso === p)?.nombre ?? `Etapa ${p}`)
-})
-const porEtapa = computed(() => contarPorEtapa(activos.value.map(r => etapaActual(r.etapas))))
-const barrasEtapas = computed(() => porEtapa.value.map((valor, p) => ({ etiqueta: `${p} ${nombresEtapas.value[p]}`, valor })))
-const dona = computed(() => porGrupo(porEtapa.value).map(g => ({ nombre: g.nombre, valor: g.valor, color: g.color })))
+const etapas = computed(() => datos.value?.clientes_por_etapa ?? [])
+const barrasEtapas = computed(() => Array.from({ length: TOTAL_ETAPAS }, (_, p) => {
+  const e = etapas.value.find(x => x.numero_paso === p)
+  return { etiqueta: `${p} ${e?.nombre ?? `Etapa ${p}`}`, valor: e?.clientes ?? 0 }
+}))
+const dona = computed(() => porGrupo(barrasEtapas.value.map(b => b.valor)).map(g => ({ nombre: g.nombre, valor: g.valor, color: g.color })))
 
-const estatusDocs = computed(() => documentosPorEstatus(registros.value))
+const estatusDocs = computed(() => datos.value?.documentos_por_estatus ?? { si: 0, por_confirmar: 0, no: 0 })
 const donaDocs = computed(() => [
   { nombre: 'Aprobados', valor: estatusDocs.value.si, color: '#16a34a' },
   { nombre: 'Por confirmar', valor: estatusDocs.value.por_confirmar, color: '#e5a50a' },
@@ -49,10 +52,8 @@ const donaDocs = computed(() => [
 ])
 const totalDocs = computed(() => estatusDocs.value.si + estatusDocs.value.por_confirmar + estatusDocs.value.no)
 
-
-const iniciales = (c: Cliente) => `${c.nombre.charAt(0)}${c.apellido_paterno.charAt(0)}`.toUpperCase()
 const claseEstado = (estado: EstadoAccion) => estado === 'completada' ? 'border-green-600 text-green-700' : estado === 'vencida' ? 'border-red-500 text-red-600' : 'border-amber-500 text-amber-700'
-const subidoPor = (d: DocumentoCliente, c: Cliente) => d.subido_por === sesion.usuario?.id ? 'Tú' : d.subido_por === c.asesor_id ? 'Asesor' : 'Auxiliar'
+const subidoPor = (d: DocumentoPendiente) => d.subido_por_id === sesion.usuario?.id ? 'Tú' : d.subido_por_nombre ?? '—'
 const dias = (n: number) => (n === 1 ? '1 día' : `${n} días`)
 
 const claseTarjeta = 'flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm'
@@ -101,7 +102,7 @@ const claseCabecera = 'border-b border-neutral-200 text-neutral-600'
     </div>
 
     <p
-      v-if="cargando && registros.length === 0"
+      v-if="cargando && !datos"
       class="py-16 text-center text-neutral-500"
       role="status"
     >
@@ -128,7 +129,7 @@ const claseCabecera = 'border-b border-neutral-200 text-neutral-600'
     </div>
 
     <p
-      v-else-if="activos.length === 0"
+      v-else-if="activos === 0"
       class="rounded-2xl border border-dashed border-neutral-300 bg-white py-16 text-center text-neutral-500"
     >
       Aún no tienes clientes activos.
@@ -152,7 +153,7 @@ const claseCabecera = 'border-b border-neutral-200 text-neutral-600'
               data-valor
               class="font-display text-4xl font-semibold text-profundo-900"
             >
-              {{ activos.length }}
+              {{ activos }}
             </p>
             <p class="text-sm text-neutral-600">
               {{ esAsesor ? 'Mis clientes activos' : 'Clientes activos' }}
@@ -214,7 +215,7 @@ const claseCabecera = 'border-b border-neutral-200 text-neutral-600'
               data-valor
               class="font-display text-4xl font-semibold text-profundo-900"
             >
-              {{ pendientes.length }}
+              {{ totalPendientes }}
             </p>
             <p class="text-sm text-neutral-600">
               {{ esAsesor ? 'Documentos pendientes' : 'Documentos pendientes de revisión' }}
@@ -234,7 +235,7 @@ const claseCabecera = 'border-b border-neutral-200 text-neutral-600'
               data-valor
               class="font-display text-4xl font-semibold text-profundo-900"
             >
-              {{ sinAvance.length }}
+              {{ detenidosTotal }}
             </p>
             <p class="text-sm text-neutral-600">
               Clientes con avance detenido
@@ -294,34 +295,34 @@ const claseCabecera = 'border-b border-neutral-200 text-neutral-600'
             <tbody class="divide-y divide-neutral-100">
               <tr
                 v-for="a in acciones.slice(0, MAX_FILAS)"
-                :key="`${a.cliente.id}-${a.etapa}`"
+                :key="`${a.cliente_id}-${a.numero_paso}`"
                 data-accion-fila
               >
                 <td class="px-3 py-2.5">
-                  <span class="flex items-center gap-2"><span class="flex size-8 items-center justify-center rounded-lg bg-marca-100 text-xs font-semibold text-marca-800">{{ iniciales(a.cliente) }}</span>{{ nombreCliente(a.cliente) }}</span>
+                  <span class="flex items-center gap-2"><span class="flex size-8 items-center justify-center rounded-lg bg-marca-100 text-xs font-semibold text-marca-800">{{ iniciales(a.cliente_nombre) }}</span>{{ a.cliente_nombre }}</span>
                 </td>
                 <td
                   v-if="esSupervisor"
                   data-asesor
                   class="px-3 py-2.5"
                 >
-                  {{ nombreAsesor(a.cliente.asesor_id) ?? '—' }}
+                  {{ a.asesor_nombre }}
                 </td>
                 <td class="px-3 py-2.5">
-                  {{ formatearFechaCorta(a.fecha) }}
+                  {{ formatearFechaCorta(a.fecha_compromiso.slice(0, 10)) }}
                 </td>
                 <td class="px-3 py-2.5">
                   {{ a.etapa }}
                 </td>
                 <td class="px-3 py-2.5">
-                  {{ a.accion || '—' }}
+                  {{ a.accion_a_realizar || '—' }}
                 </td>
                 <td class="px-3 py-2.5 text-center">
                   <span
                     data-estado-accion
                     class="inline-block rounded border px-2 py-0.5 text-xs"
                     :class="claseEstado(a.estado)"
-                  >{{ textoVencimiento(a.fecha, a.estado, hoy) }}</span>
+                  >{{ textoVencimiento(a.fecha_compromiso.slice(0, 10), a.estado, hoy) }}</span>
                 </td>
               </tr>
             </tbody>
@@ -339,7 +340,7 @@ const claseCabecera = 'border-b border-neutral-200 text-neutral-600'
             {{ esAsesor ? 'Mis clientes por etapa del proceso' : 'Clientes por etapa del proceso' }}
           </h3>
           <p class="mb-4 text-sm text-neutral-600">
-            {{ activos.length }} clientes activos en 16 etapas
+            {{ activos }} clientes activos en 16 etapas
           </p>
           <BarrasHorizontales :filas="barrasEtapas" />
         </article>
@@ -354,7 +355,7 @@ const claseCabecera = 'border-b border-neutral-200 text-neutral-600'
             <DonaGrafica
               data-dona="etapas"
               :segmentos="dona"
-              :total="activos.length"
+              :total="activos"
               etiqueta="Clientes"
             />
             <NuxtLink
@@ -424,38 +425,38 @@ const claseCabecera = 'border-b border-neutral-200 text-neutral-600'
               <tbody class="divide-y divide-neutral-100">
                 <tr
                   v-for="d in pendientes.slice(0, MAX_FILAS)"
-                  :key="d.documento.id"
+                  :key="d.documento_id"
                   data-documento-fila
                 >
                   <td class="px-3 py-2.5">
-                    <span class="flex items-center gap-2"><span class="flex size-8 items-center justify-center rounded-lg bg-marca-100 text-xs font-semibold text-marca-800">{{ iniciales(d.cliente) }}</span>{{ nombreCliente(d.cliente) }}</span>
+                    <span class="flex items-center gap-2"><span class="flex size-8 items-center justify-center rounded-lg bg-marca-100 text-xs font-semibold text-marca-800">{{ iniciales(d.cliente_nombre) }}</span>{{ d.cliente_nombre }}</span>
                   </td>
                   <td class="px-3 py-2.5">
-                    {{ nombreTipo(d.documento.tipo_documento_id) }}
+                    {{ d.tipo_documento }}
                   </td>
                   <td
                     v-if="esAuxiliar"
                     data-subido-por
                     class="px-3 py-2.5"
                   >
-                    {{ subidoPor(d.documento, d.cliente) }}
+                    {{ subidoPor(d) }}
                   </td>
                   <td class="px-3 py-2.5">
-                    {{ formatearFechaCorta(fechaLocalISO(d.documento.fecha_carga)) }}
+                    {{ formatearFechaCorta(fechaLocalISO(d.fecha_carga)) }}
                   </td>
                   <td class="px-3 py-2.5">
-                    {{ d.etapa }}
+                    {{ d.etapa_actual }}
                   </td>
                   <td class="px-3 py-2.5 text-center">
                     <span
                       data-revision
                       class="inline-block rounded border px-2 py-0.5 text-xs"
-                      :class="d.documento.estatus === 'no' ? 'border-red-500 text-red-600' : 'border-amber-500 text-amber-700'"
-                    >{{ d.documento.estatus === 'no' ? 'No validado' : 'Pendiente' }}</span>
+                      :class="d.estatus === 'no' ? 'border-red-500 text-red-600' : 'border-amber-500 text-amber-700'"
+                    >{{ d.estatus === 'no' ? 'No validado' : 'Pendiente' }}</span>
                   </td>
                   <td class="px-3 py-2.5 text-center">
                     <UButton
-                      :to="`/clientes/${d.cliente.id}/archivos`"
+                      :to="`/clientes/${d.cliente_id}/archivos`"
                       data-accion="revisar"
                       size="sm"
                       class="bg-profundo-500 text-white hover:bg-profundo-600"
@@ -520,20 +521,20 @@ const claseCabecera = 'border-b border-neutral-200 text-neutral-600'
             <tbody class="divide-y divide-neutral-100">
               <tr
                 v-for="f in carga.filas"
-                :key="f.asesorId"
+                :key="f.asesor_id"
                 data-carga-fila
               >
                 <td class="px-3 py-2.5">
-                  {{ nombreAsesor(f.asesorId) ?? 'Asesor' }}
+                  {{ f.asesor_nombre }}
                 </td>
                 <td class="px-3 py-2.5 text-center">
-                  {{ f.activos }}
+                  {{ f.clientes_activos }}
                 </td>
                 <td class="px-3 py-2.5 text-center">
-                  {{ f.detenidos }}
+                  {{ f.clientes_detenidos }}
                 </td>
                 <td class="px-3 py-2.5 text-center">
-                  {{ f.pensionados }}
+                  {{ f.clientes_pensionados }}
                 </td>
               </tr>
               <tr
@@ -608,36 +609,36 @@ const claseCabecera = 'border-b border-neutral-200 text-neutral-600'
             <tbody class="divide-y divide-neutral-100">
               <tr
                 v-for="d in sinAvance.slice(0, MAX_FILAS)"
-                :key="d.cliente.id"
+                :key="d.cliente_id"
                 data-detenido-fila
               >
                 <td class="px-3 py-2.5">
-                  <span class="flex items-center gap-2"><span class="flex size-8 items-center justify-center rounded-lg bg-marca-100 text-xs font-semibold text-marca-800">{{ iniciales(d.cliente) }}</span>{{ nombreCliente(d.cliente) }}</span>
+                  <span class="flex items-center gap-2"><span class="flex size-8 items-center justify-center rounded-lg bg-marca-100 text-xs font-semibold text-marca-800">{{ iniciales(d.cliente_nombre) }}</span>{{ d.cliente_nombre }}</span>
                 </td>
                 <td
                   v-if="esSupervisor"
                   data-asesor
                   class="px-3 py-2.5"
                 >
-                  {{ nombreAsesor(d.cliente.asesor_id) ?? '—' }}
+                  {{ d.asesor_nombre }}
                 </td>
                 <td class="px-3 py-2.5">
-                  {{ d.etapa }}
+                  {{ d.etapa_actual }}
                 </td>
                 <td class="px-3 py-2.5 font-medium">
                   <span
                     class="mr-1.5 inline-block size-2 rounded-full"
-                    :class="d.estatusId === 9 ? 'bg-red-500' : 'bg-amber-400'"
-                  />{{ nombreEstatus(d.estatusId) }}
+                    :class="d.estatus_id === 9 ? 'bg-red-500' : 'bg-amber-400'"
+                  />{{ d.estatus ?? '—' }}
                 </td>
                 <td class="px-3 py-2.5">
-                  {{ formatearFechaCorta(d.ultima) }}
+                  {{ formatearFechaCorta(fechaLocalISO(d.ultima_actividad)) }}
                 </td>
                 <td
                   data-dias
                   class="px-3 py-2.5 text-center"
                 >
-                  {{ dias(d.dias) }}
+                  {{ dias(d.dias_sin_actividad) }}
                 </td>
               </tr>
             </tbody>

@@ -1645,6 +1645,26 @@ export interface paths {
         patch: operations["AvisosController_atenderAviso"];
         trace?: never;
     };
+    "/api/v1/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Resumen del Dashboard de Inicio, ya calculado y con el alcance del usuario
+         * @description Roles permitidos: asesor, auxiliar, supervisor.
+         */
+        get: operations["DashboardController_obtener"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/etl/importaciones": {
         parameters: {
             query?: never;
@@ -2613,6 +2633,189 @@ export interface components {
              * @example 4
              */
             estatus_id: number | null;
+        };
+        ResumenDashboard: {
+            /**
+             * @description Clientes cuya etapa 15 (Finalización) no está Finalizada.
+             * @example 42
+             */
+            clientes_activos: number;
+            /**
+             * @description Clientes con la etapa 15 Finalizada.
+             * @example 7
+             */
+            clientes_pensionados: number;
+            /**
+             * @description Usuarios con rol asesor y activo. Solo para el supervisor; null para los demás.
+             * @example 5
+             */
+            asesores_activos: number | null;
+            /**
+             * @description Acciones del mes con estado «proxima».
+             * @example 9
+             */
+            acciones_proximas_mes: number;
+            /**
+             * @description Documentos de clientes activos con estatus por_confirmar.
+             * @example 11
+             */
+            documentos_por_confirmar: number;
+            /**
+             * @description Documentos de clientes activos con estatus no (no válidos).
+             * @example 3
+             */
+            documentos_con_observaciones: number;
+            /**
+             * @description Clientes activos con avance detenido.
+             * @example 4
+             */
+            clientes_avance_detenido: number;
+        };
+        ClientesPorEtapa: {
+            /** @example 1 */
+            numero_paso: number;
+            /** @example Diagnóstico especializado */
+            nombre: string;
+            /**
+             * @description Clientes activos cuya etapa actual es esta.
+             * @example 6
+             */
+            clientes: number;
+        };
+        DocumentosPorEstatus: {
+            /** @example 120 */
+            si: number;
+            /** @example 11 */
+            por_confirmar: number;
+            /** @example 3 */
+            no: number;
+        };
+        AccionDelMes: {
+            /** @example 16699b14-2d83-4fab-9d9d-1f4f16131f61 */
+            cliente_id: string;
+            /** @example Rosa Pérez Ficticia */
+            cliente_nombre: string;
+            /** @example 16699b14-2d83-4fab-9d9d-1f4f16131f61 */
+            asesor_id: string;
+            /**
+             * @description Nombre y apellido paterno.
+             * @example Elena Rivas
+             */
+            asesor_nombre: string;
+            /** @example 3 */
+            numero_paso: number;
+            /** @example Unificación de NSS */
+            etapa: string;
+            /**
+             * @description AAAA-MM-DD
+             * @example 2026-11-20
+             */
+            fecha_compromiso: string;
+            /** @example Entregar la constancia al cliente. */
+            accion_a_realizar: string | null;
+            /**
+             * @example proxima
+             * @enum {string}
+             */
+            estado: "completada" | "proxima" | "vencida";
+        };
+        DocumentoPendiente: {
+            /** @example 16699b14-2d83-4fab-9d9d-1f4f16131f61 */
+            documento_id: string;
+            /** @example 16699b14-2d83-4fab-9d9d-1f4f16131f61 */
+            cliente_id: string;
+            /** @example Rosa Pérez Ficticia */
+            cliente_nombre: string;
+            /** @example 2 */
+            tipo_documento_id: number;
+            /** @example Acta de nacimiento */
+            tipo_documento: string;
+            /**
+             * @example por_confirmar
+             * @enum {string}
+             */
+            estatus: "por_confirmar" | "no";
+            /**
+             * Format: date-time
+             * @example 2026-11-03T15:00:00.000Z
+             */
+            fecha_carga: string;
+            /** @example 16699b14-2d83-4fab-9d9d-1f4f16131f61 */
+            subido_por_id: string;
+            /**
+             * @description Nombre y apellido paterno; null si el usuario ya no existe.
+             * @example Elena Rivas
+             */
+            subido_por_nombre: string | null;
+            /** @example Diagnóstico especializado */
+            etapa_actual: string;
+        };
+        ClienteDetenido: {
+            /** @example 16699b14-2d83-4fab-9d9d-1f4f16131f61 */
+            cliente_id: string;
+            /** @example Rosa Pérez Ficticia */
+            cliente_nombre: string;
+            /** @example 16699b14-2d83-4fab-9d9d-1f4f16131f61 */
+            asesor_id: string;
+            /** @example Elena Rivas */
+            asesor_nombre: string;
+            /** @example Diagnóstico especializado */
+            etapa_actual: string;
+            /**
+             * @description estatus_tramite.id de la etapa actual.
+             * @example 9
+             */
+            estatus_id: number | null;
+            /** @example Detenido */
+            estatus: string | null;
+            /**
+             * @description AAAA-MM-DD (fecha de Cancún).
+             * @example 2026-10-31
+             */
+            ultima_actividad: string;
+            /** @example 15 */
+            dias_sin_actividad: number;
+        };
+        CargaPorAsesor: {
+            /** @example 16699b14-2d83-4fab-9d9d-1f4f16131f61 */
+            asesor_id: string;
+            /** @example Elena Rivas */
+            asesor_nombre: string;
+            /** @example 8 */
+            clientes_activos: number;
+            /** @example 2 */
+            clientes_detenidos: number;
+            /** @example 1 */
+            clientes_pensionados: number;
+        };
+        DashboardRespuesta: {
+            /**
+             * @description Hoy en America/Cancun (AAAA-MM-DD).
+             * @example 2026-11-15
+             */
+            fecha: string;
+            resumen: components["schemas"]["ResumenDashboard"];
+            /** @description Siempre las 16 etapas (0 a 15). */
+            clientes_por_etapa: components["schemas"]["ClientesPorEtapa"][];
+            documentos_por_estatus: components["schemas"]["DocumentosPorEstatus"];
+            /** @description Por fecha_compromiso y luego cliente_nombre; limitada por ?limite. */
+            acciones_del_mes: components["schemas"]["AccionDelMes"][];
+            /**
+             * @description Total de acciones del mes, sin límite.
+             * @example 14
+             */
+            total_acciones_del_mes: number;
+            /** @description por_confirmar y no, por fecha_carga ascendente; limitada por ?limite. */
+            documentos_pendientes: components["schemas"]["DocumentoPendiente"][];
+            /**
+             * @description Total de documentos pendientes, sin límite.
+             * @example 14
+             */
+            total_documentos_pendientes: number;
+            /** @description Más días sin actividad primero; limitada por ?limite. El total es resumen.clientes_avance_detenido. */
+            clientes_detenidos: components["schemas"]["ClienteDetenido"][];
+            /** @description Solo el supervisor (todos los asesores con clientes); null para los demás. */
+            carga_por_asesor: components["schemas"]["CargaPorAsesor"][] | null;
         };
         ImportarExcelDto: {
             /**
@@ -6869,6 +7072,57 @@ export interface operations {
             };
             /** @description El aviso no existe o es de un cliente fuera del alcance. */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DashboardController_obtener: {
+        parameters: {
+            query?: {
+                /** @description Filas máximas de cada lista (los totales siempre son completos). */
+                limite?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardRespuesta"];
+                };
+            };
+            /** @description limite no es un entero entre 1 y 50. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /**
+             * @description Falta el token o no es válido.
+             *
+             *     Token ausente, vencido o inválido.
+             */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /**
+             * @description El rol no puede consultar el dashboard.
+             *
+             *     El rol del usuario no tiene permiso en esta ruta.
+             */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

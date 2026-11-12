@@ -7,8 +7,6 @@ import { fechaLarga } from '~/utils/dashboard'
 import { hoyISO } from '~/utils/fechas'
 import type { Rol } from '~/types/sesion'
 import { SESION_API, errorHttp, stubFetch } from './ayudas'
-import { ASESOR_A, ASESOR_B, CLIENTES, USUARIOS_SUPERVISOR } from './clientes-datos'
-import { ESTATUS, TIPOS_DOCUMENTO, enDiasISO } from './expediente-datos'
 
 const navegarMock = vi.hoisted(() => vi.fn())
 mockNuxtImport('navigateTo', () => navegarMock)
@@ -16,54 +14,70 @@ mockNuxtImport('navigateTo', () => navegarMock)
 mockNuxtImport('$fetch', () => (...args: unknown[]) => (globalThis as unknown as { $fetch: (...a: unknown[]) => unknown }).$fetch(...args))
 mockNuxtImport('useToast', () => () => ({ add: vi.fn() }))
 
+type Llamada = [string, { method: string, query?: Record<string, unknown> }]
+
 const NOMBRES = ['Diagnóstico inicial', 'Diagnóstico especializado', 'Corrección de datos personales', 'Unificación de NSS', 'Aclaración/recuperación de semanas', 'Estrategia Modalidad 10', 'Estrategia Modalidad 40', 'Modalidad 40 retroactiva', 'IMSS-ISSSTE/doble pensión', 'Unificación AFORE/cuentas', 'SAR 92', 'Solicitud de pensión', 'Negativa de pensión', 'Juicio/Jurisdicción', 'Cobranza final', 'Finalización']
 const hace = (dias: number) => new Date(Date.now() - dias * 86_400_000).toISOString()
+const porEtapa = (cuenta: Record<number, number>) => NOMBRES.map((nombre, numero_paso) => ({ numero_paso, nombre, clientes: cuenta[numero_paso] ?? 0 }))
 
-function etapasDe(clienteId: string, cambios: Record<number, Record<string, unknown>>, actualizado = hace(1)) {
-  const etapas = NOMBRES.map((nombre, paso) => ({
-    numero_paso: paso, nombre, id: `${clienteId}-e${paso}`, cliente_id: clienteId, etapa_id: paso + 1, estatus_id: 2, avance_porcentaje: 10,
-    accion_a_realizar: null, fecha_compromiso: null, fecha_completada: null, reactivado_en: null, creado_el: actualizado, actualizado_el: actualizado, motivo_rechazo: null,
-    ...cambios[paso],
-  }))
-  return { avance_global: 10, etapas }
+const accion = (cliente: string, asesor: string, paso: number, accion: string, estado: string, fecha = hoyISO()) =>
+  ({ cliente_id: `c-${cliente}`, cliente_nombre: cliente, asesor_id: `as-${asesor}`, asesor_nombre: asesor, numero_paso: paso, etapa: NOMBRES[paso], fecha_compromiso: fecha, accion_a_realizar: accion, estado })
+const pendiente = (id: string, cliente: string, tipo: string, estatus: string, subidoPor: string, subidoPorId: string) =>
+  ({ documento_id: id, cliente_id: `c-${cliente}`, cliente_nombre: cliente, tipo_documento_id: 1, tipo_documento: tipo, estatus, fecha_carga: hace(3), subido_por_id: subidoPorId, subido_por_nombre: subidoPor, etapa_actual: 'Corrección de datos personales' })
+const detenido = (cliente: string, asesor: string, etapa: string, estatus: string | null, dias: number) =>
+  ({ cliente_id: `c-${cliente}`, cliente_nombre: cliente, asesor_id: `as-${asesor}`, asesor_nombre: asesor, etapa_actual: etapa, estatus_id: estatus ? 9 : 3, estatus, ultima_actividad: hace(dias), dias_sin_actividad: dias })
+
+const base = {
+  fecha: hoyISO(),
+  resumen: { clientes_activos: 2, clientes_pensionados: 0, asesores_activos: null, acciones_proximas_mes: 1, documentos_por_confirmar: 1, documentos_con_observaciones: 1, clientes_avance_detenido: 1 },
+  clientes_por_etapa: porEtapa({ 1: 1, 2: 1 }),
+  documentos_por_estatus: { si: 0, por_confirmar: 1, no: 1 },
+  acciones_del_mes: [accion('María Elena Rodríguez Salas', 'Ana Pérez', 1, 'Entregar constancia', 'proxima')],
+  total_acciones_del_mes: 1,
+  documentos_pendientes: [
+    pendiente('d1', 'María Elena Rodríguez Salas', 'Acta de Nacimiento', 'por_confirmar', 'Carlos Montes', 'as-B'),
+    pendiente('d2', 'José Ángel Núñez', 'INE', 'no', 'Ana Pérez', SESION_API.usuario.id),
+  ],
+  total_documentos_pendientes: 2,
+  clientes_detenidos: [detenido('José Ángel Núñez', 'Ana Pérez', 'Corrección de datos personales', 'Detenido', 1)],
+  carga_por_asesor: null,
 }
-const [C1, C2, C3, C4] = CLIENTES.map(c => c.id) as [string, string, string, string]
-const ETAPAS: Record<string, unknown> = {
-  [C1]: etapasDe(C1, { 1: { estatus_id: 4, fecha_compromiso: enDiasISO(0), accion_a_realizar: 'Entregar constancia' } }),
-  [C2]: etapasDe(C2, { 4: { estatus_id: 6, fecha_compromiso: enDiasISO(0), fecha_completada: enDiasISO(0), accion_a_realizar: 'Subir acta' }, 5: { estatus_id: 3 } }, hace(20)),
-  [C3]: etapasDe(C3, { 2: { estatus_id: 9 } }),
-  [C4]: etapasDe(C4, { 15: { estatus_id: 6 } }),
-}
-const doc = (id: string, clienteId: string, estatus: string, tipo = 1, subidoPor = ASESOR_A) => ({ id, cliente_id: clienteId, tipo_documento_id: tipo, archivo_path: 'x', nombre_archivo_original: `${id}.pdf`, mime_type: 'application/pdf', estatus, numero_referencia: null, fecha_carga: hace(3), subido_por: subidoPor, observaciones: null })
-const DOCS: Record<string, unknown[]> = {
-  [C1]: [doc('d1', C1, 'por_confirmar', 1, ASESOR_B)],
-  [C2]: [doc('d3', C2, 'si', 2)],
-  [C3]: [doc('d2', C3, 'no', 3, SESION_API.usuario.id)],
-  [C4]: [doc('d4', C4, 'por_confirmar')],
+const RESPUESTAS: Record<Rol, unknown> = {
+  asesor: base,
+  auxiliar: base,
+  supervisor: {
+    ...base,
+    resumen: { ...base.resumen, clientes_activos: 3, clientes_pensionados: 1, asesores_activos: 3, clientes_avance_detenido: 2 },
+    clientes_por_etapa: porEtapa({ 1: 1, 2: 1, 4: 1 }),
+    acciones_del_mes: [
+      accion('Iván Torres', 'Carlos Montes', 4, 'Subir acta', 'completada'),
+      accion('María Elena Rodríguez Salas', 'Ana Pérez', 1, 'Entregar constancia', 'proxima'),
+    ],
+    total_acciones_del_mes: 2,
+    clientes_detenidos: [
+      detenido('Iván Torres', 'Carlos Montes', 'Estrategia Modalidad 10', null, 20),
+      detenido('José Ángel Núñez', 'Ana Pérez', 'Corrección de datos personales', 'Detenido', 1),
+    ],
+    carga_por_asesor: [
+      { asesor_id: 'as-A', asesor_nombre: 'Ana Pérez', clientes_activos: 2, clientes_detenidos: 1, clientes_pensionados: 0 },
+      { asesor_id: 'as-B', asesor_nombre: 'Carlos Montes', clientes_activos: 1, clientes_detenidos: 1, clientes_pensionados: 1 },
+    ],
+  },
 }
 
-function api(rol: Rol, falla = false) {
-  // El backend entrega a cada rol solo sus clientes: el Asesor y el Auxiliar ven C1 y C3.
-  const visibles = rol === 'supervisor' ? CLIENTES : CLIENTES.filter(c => c.id === C1 || c.id === C3)
+function api(rol: Rol, falla = false, respuesta: unknown = RESPUESTAS[rol]) {
   return stubFetch((ruta) => {
     const r = ruta as string
     if (r === '/auth/login') return Promise.resolve({ ...SESION_API, usuario: { ...SESION_API.usuario, rol } })
-    if (r === '/clientes') return falla ? Promise.reject(errorHttp(500, { message: 'Error' })) : Promise.resolve(visibles.map(c => ({ ...c })))
-    const etapas = r.match(/^\/clientes\/([^/]+)\/etapas$/)
-    if (etapas) return Promise.resolve(ETAPAS[etapas[1]!])
-    const docs = r.match(/^\/clientes\/([^/]+)\/documentos$/)
-    if (docs) return Promise.resolve(DOCS[docs[1]!])
-    if (r === '/catalogos/tipos-documento') return Promise.resolve(TIPOS_DOCUMENTO)
-    if (r === '/catalogos/estatus') return Promise.resolve(ESTATUS)
-    if (r === '/usuarios') return rol === 'supervisor' ? Promise.resolve(USUARIOS_SUPERVISOR) : Promise.reject(errorHttp(403, { message: 'No' }))
-    if (r === '/avisos' || r === '/agenda') return Promise.resolve([])
+    if (r === '/dashboard') return falla ? Promise.reject(errorHttp(500, { message: 'Error' })) : Promise.resolve(JSON.parse(JSON.stringify(respuesta)))
+    // Nada más: el resumen ya viene calculado, con nombres y alcance por rol.
     return Promise.reject(errorHttp(404, { message: `sin simular: ${r}` }))
   })
 }
 
-async function abrir(rol: Rol, falla = false) {
+async function abrir(rol: Rol, falla = false, respuesta?: unknown) {
   setActivePinia(useNuxtApp().$pinia as Pinia)
-  const fetchMock = api(rol, falla)
+  const fetchMock = api(rol, falla, respuesta ?? RESPUESTAS[rol])
   await useSessionStore().iniciarSesion('ana@ejemplo.com', 'secreta123')
   const wrapper = await mountSuspended(InicioPage)
   await vi.waitFor(() => expect(wrapper.text()).not.toMatch(/cargando el dashboard/i), { timeout: 4000 })
@@ -85,9 +99,16 @@ describe('Dashboard de Inicio', () => {
     expect(wrapper.find('[data-fecha-hoy]').text()).toBe(fechaLarga(hoyISO()))
   })
 
-  it('"Inicio" ya no rebota a Clientes: muestra el dashboard', async () => {
+  it('"Inicio" no rebota a Clientes: muestra el dashboard', async () => {
     await abrir('asesor')
     expect(navegarMock).not.toHaveBeenCalled()
+  })
+
+  it('arma todo con una sola petición a GET /dashboard (sin leer clientes, etapas, documentos ni usuarios)', async () => {
+    const { fetchMock } = await abrir('supervisor')
+    const llamadas = (fetchMock.mock.calls as Llamada[]).filter(([r]) => r !== '/auth/login')
+    expect(llamadas.map(([r, o]) => `${o.method} ${r}`)).toEqual(['GET /dashboard'])
+    expect(llamadas[0]![1].query).toEqual({ limite: 50 })
   })
 
   describe('Asesor', () => {
@@ -105,6 +126,7 @@ describe('Dashboard de Inicio', () => {
       const f = filas(wrapper, 'detenidos', 'data-detenido-fila')
       expect(f).toHaveLength(1)
       expect(f[0]!.text()).toContain('Corrección de datos personales')
+      expect(f[0]!.text()).toContain('Detenido')
       expect(f[0]!.find('[data-dias]').text()).toBe('1 día')
       expect(f[0]!.find('[data-asesor]').exists()).toBe(false)
       expect(wrapper.find('[data-seccion="detenidos"]').text()).not.toMatch(/asesor/i)
@@ -114,7 +136,7 @@ describe('Dashboard de Inicio', () => {
       const { wrapper } = await abrir('asesor')
       const dona = wrapper.find('[data-dona="documentos"]')
       expect(dona.exists()).toBe(true)
-      expect(dona.text()).toContain('2') // los dos documentos de sus clientes activos
+      expect(dona.text()).toContain('2')
       expect(dona.findAll('[data-leyenda]').map(l => l.text())[1]).toContain('Por confirmar')
     })
 
@@ -148,7 +170,7 @@ describe('Dashboard de Inicio', () => {
       const f = filas(wrapper, 'documentos', 'data-documento-fila')
       expect(f).toHaveLength(1)
       expect(f[0]!.text()).toContain('Acta de Nacimiento')
-      expect(f[0]!.find('a[data-accion="revisar"]').attributes('href')).toBe(`/clientes/${C1}/archivos`)
+      expect(f[0]!.find('a[data-accion="revisar"]').attributes('href')).toBe('/clientes/c-María Elena Rodríguez Salas/archivos')
     })
 
     it('no muestra las secciones de carga por asesor', async () => {
@@ -156,9 +178,9 @@ describe('Dashboard de Inicio', () => {
       for (const s of ['carga-grafica', 'carga-tabla']) expect(wrapper.find(`[data-seccion="${s}"]`).exists(), s).toBe(false)
     })
 
-    it('Refrescar vuelve a pedir los datos', async () => {
+    it('Refrescar vuelve a pedir el resumen', async () => {
       const { wrapper, fetchMock } = await abrir('asesor')
-      const pedidos = () => (fetchMock.mock.calls as [string][]).filter(([r]) => r === '/clientes').length
+      const pedidos = () => (fetchMock.mock.calls as [string][]).filter(([r]) => r === '/dashboard').length
       expect(pedidos()).toBe(1)
       await wrapper.find('button[data-accion="refrescar"]').trigger('click')
       await flushPromises()
@@ -180,7 +202,7 @@ describe('Dashboard de Inicio', () => {
       const f = filas(wrapper, 'documentos', 'data-documento-fila')
       expect(f).toHaveLength(2)
       expect(f.map(x => x.find('[data-revision]').text())).toEqual(['Pendiente', 'No validado'])
-      expect(f.map(x => x.find('[data-subido-por]').text())).toEqual(['Auxiliar', 'Tú'])
+      expect(f.map(x => x.find('[data-subido-por]').text())).toEqual(['Carlos Montes', 'Tú'])
     })
 
     it('documentos por estatus en una dona con conteo y porcentaje', async () => {
@@ -204,7 +226,7 @@ describe('Dashboard de Inicio', () => {
       expect(f[0]!.find('[data-dias]').text()).toBe('1 día')
     })
 
-    it('no muestra la columna de asesor: el Auxiliar no puede leer los usuarios', async () => {
+    it('no muestra la columna de asesor', async () => {
       const { wrapper } = await abrir('auxiliar')
       expect(wrapper.find('[data-seccion="acciones"] [data-columna-asesor]').exists()).toBe(false)
     })
@@ -216,7 +238,7 @@ describe('Dashboard de Inicio', () => {
       expect(tarjeta(wrapper, 'clientes').text()).toBe('3')
       expect(tarjeta(wrapper, 'asesores').text()).toBe('3')
       expect(tarjeta(wrapper, 'acciones').text()).toBe('1')
-      expect(tarjeta(wrapper, 'detenidos').text()).toBe('2') // una etapa detenida y otro con 20 días sin actividad
+      expect(tarjeta(wrapper, 'detenidos').text()).toBe('2')
       expect(wrapper.find('[data-tarjeta="documentos"]').exists()).toBe(false)
     })
 
@@ -237,7 +259,7 @@ describe('Dashboard de Inicio', () => {
       expect(celdas(wrapper.find('[data-seccion="carga-tabla"] [data-carga-total]'))).toEqual(['Total', '3', '2', '1'])
     })
 
-    it('clientes con avance detenido incluye al asesor y ordena por días sin actividad', async () => {
+    it('clientes con avance detenido incluye al asesor y respeta el orden del backend (más días primero)', async () => {
       const { wrapper } = await abrir('supervisor')
       const f = filas(wrapper, 'detenidos', 'data-detenido-fila')
       expect(f).toHaveLength(2)
@@ -246,17 +268,15 @@ describe('Dashboard de Inicio', () => {
     })
   })
 
-  it('si no se pueden cargar los clientes muestra un error con reintentar', async () => {
+  it('si no se puede cargar el resumen muestra un error con reintentar', async () => {
     const { wrapper } = await abrir('asesor', true)
     expect(wrapper.find('[role="alert"]').text()).toMatch(/no se pudo cargar el dashboard/i)
     expect(wrapper.find('button[data-accion="reintentar"]').exists()).toBe(true)
   })
 
-  it('sin clientes lo dice en vez de mostrar gráficas vacías', async () => {
-    setActivePinia(useNuxtApp().$pinia as Pinia)
-    stubFetch((ruta) => ruta === '/auth/login' ? Promise.resolve({ ...SESION_API }) : ruta === '/clientes' ? Promise.resolve([]) : Promise.resolve([]))
-    await useSessionStore().iniciarSesion('ana@ejemplo.com', 'secreta123')
-    const wrapper = await mountSuspended(InicioPage)
-    await vi.waitFor(() => expect(wrapper.text()).toMatch(/aún no tienes clientes activos/i))
+  it('sin clientes activos lo dice en vez de mostrar gráficas vacías', async () => {
+    const vacio = { ...base, resumen: { ...base.resumen, clientes_activos: 0, acciones_proximas_mes: 0, documentos_por_confirmar: 0, documentos_con_observaciones: 0, clientes_avance_detenido: 0 }, clientes_por_etapa: porEtapa({}), acciones_del_mes: [], documentos_pendientes: [], clientes_detenidos: [] }
+    const { wrapper } = await abrir('asesor', false, vacio)
+    expect(wrapper.text()).toMatch(/aún no tienes clientes activos/i)
   })
 })
