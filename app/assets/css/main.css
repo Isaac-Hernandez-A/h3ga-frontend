@@ -57,3 +57,23 @@
   --color-neutral-900: #011818;
   --color-neutral-950: #000d0d;
 }
+
+/* Campana de avisos: se sacude un momento como recordatorio (se apaga con "reducir movimiento"). */
+@keyframes campana-sacudir {
+  0%, 100% { transform: rotate(0); }
+  10% { transform: rotate(16deg); }
+  20% { transform: rotate(-14deg); }
+  30% { transform: rotate(12deg); }
+  40% { transform: rotate(-10deg); }
+  50% { transform: rotate(7deg); }
+  60% { transform: rotate(-5deg); }
+  70% { transform: rotate(3deg); }
+  80% { transform: rotate(-2deg); }
+}
+.campana-sacudir {
+  transform-origin: 50% 10%;
+  animation: campana-sacudir 1.6s ease-in-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .campana-sacudir { animation: none; }
+}

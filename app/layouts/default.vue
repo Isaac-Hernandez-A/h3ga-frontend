@@ -171,14 +171,17 @@ const claseEnlace = (ruta: string) => [
         </div>
         <div
           v-if="sesion.usuario"
-          class="shrink-0 text-right"
+          class="flex shrink-0 items-center gap-4"
         >
-          <p class="font-semibold leading-tight text-profundo-900">
-            {{ sesion.usuario.nombre }}
-          </p>
-          <span class="mt-0.5 inline-block rounded border border-profundo-500 px-2 text-xs capitalize text-profundo-500">
-            {{ sesion.usuario.rol }}
-          </span>
+          <CampanaAvisos />
+          <div class="text-right">
+            <p class="font-semibold leading-tight text-profundo-900">
+              {{ sesion.usuario.nombre }}
+            </p>
+            <span class="mt-0.5 inline-block rounded border border-profundo-500 px-2 text-xs capitalize text-profundo-500">
+              {{ sesion.usuario.rol }}
+            </span>
+          </div>
         </div>
       </header>
 
