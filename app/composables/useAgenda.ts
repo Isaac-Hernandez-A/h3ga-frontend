@@ -7,9 +7,22 @@ export type NuevoEvento = Pick<EventoAgenda, 'cliente_id' | 'fecha' | 'hora' | '
 export function useAgenda() {
   const api = useApi()
 
+  const avisos = useAvisosStore()
+  // Agenda y avisos están conectados: al agendar o reagendar, la campana y el contador vuelven a leer la bandeja,
+  // donde el backend genera el aviso del nuevo día.
+  const refrescarAvisos = () => { void avisos.cargar().catch(() => undefined) }
+
   return {
     listar: () => api.get<EventoAgenda[]>('/agenda'),
-    agendar: (datos: NuevoEvento) => api.post<EventoAgenda>('/agenda', datos),
-    actualizar: (id: string, datos: Partial<NuevoEvento>) => api.patch<EventoAgenda>(`/agenda/${id}`, datos),
+    agendar: async (datos: NuevoEvento) => {
+      const evento = await api.post<EventoAgenda>('/agenda', datos)
+      refrescarAvisos()
+      return evento
+    },
+    actualizar: async (id: string, datos: Partial<NuevoEvento>) => {
+      const evento = await api.patch<EventoAgenda>(`/agenda/${id}`, datos)
+      refrescarAvisos()
+      return evento
+    },
   }
 }

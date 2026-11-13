@@ -119,7 +119,8 @@ describe('useAgenda', () => {
     await agenda.listar()
     await agenda.agendar({ cliente_id: 'c', fecha: '2026-11-12', hora: '10:00', motivo: 'm', estatus: 'pendiente' })
     await agenda.actualizar('e1', { estatus: 'cumplido' })
-    expect((fetchMock.mock.calls as Llamada[]).map(([r, o]) => `${o.method} ${r} ${JSON.stringify(o.body ?? null)}`)).toEqual([
+    // Agendar y reagendar también vuelven a leer los avisos (campana): aquí solo importan las rutas de la agenda.
+    expect((fetchMock.mock.calls as Llamada[]).filter(([r]) => r !== '/avisos').map(([r, o]) => `${o.method} ${r} ${JSON.stringify(o.body ?? null)}`)).toEqual([
       'GET /agenda null',
       'POST /agenda {"cliente_id":"c","fecha":"2026-11-12","hora":"10:00","motivo":"m","estatus":"pendiente"}',
       'PATCH /agenda/e1 {"estatus":"cumplido"}',

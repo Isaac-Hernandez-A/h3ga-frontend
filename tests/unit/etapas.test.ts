@@ -47,7 +47,8 @@ describe('useEtapas', () => {
     await etapas.cambiarEstatus('e1', { estatus_id: 6 })
     await etapas.historial('e1')
 
-    const registro = (fetchMock.mock.calls as Llamada[]).map(([ruta, o]) => `${o.method} ${ruta} ${JSON.stringify(o.body ?? null)}`)
+    // Cambiar un trámite también vuelve a leer los avisos (campana): aquí solo importan las rutas de etapas.
+    const registro = (fetchMock.mock.calls as Llamada[]).filter(([ruta]) => ruta !== '/avisos').map(([ruta, o]) => `${o.method} ${ruta} ${JSON.stringify(o.body ?? null)}`)
     expect(registro).toEqual([
       `GET /clientes/${CLIENTE.id}/etapas null`,
       `PATCH /clientes/${CLIENTE.id}/etapas/e1 {"estatus_id":6}`,
@@ -55,6 +56,9 @@ describe('useEtapas', () => {
     ])
   })
 })
+
+// Guardar un cambio de etapa también vuelve a leer los avisos; estas pruebas cuentan solo la petición de la etapa.
+const sinAvisos = (m: { mock: { calls: unknown[][] } }) => m.mock.calls.filter(([ruta]) => ruta !== '/avisos')
 
 describe('CambioEstatusFormulario', () => {
   beforeEach(async () => {
@@ -116,7 +120,7 @@ describe('CambioEstatusFormulario', () => {
 
     await campo('motivo_rechazo').setValue('Falta la constancia')
     await enviar()
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(sinAvisos(fetchMock)).toHaveLength(1)
   })
 
   it('CF-09 En proceso acepta de 20 a 90 y rechaza fuera de rango, vacío o con decimales', async () => {
@@ -134,7 +138,7 @@ describe('CambioEstatusFormulario', () => {
       fetchMock.mockClear()
       await campo('avance_porcentaje').setValue(valido)
       await enviar()
-      expect(fetchMock, valido).toHaveBeenCalledTimes(1)
+      expect(sinAvisos(fetchMock), valido).toHaveLength(1)
     }
   })
 
