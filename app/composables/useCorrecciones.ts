@@ -10,5 +10,7 @@ export function useCorrecciones(clienteId: string) {
     crear: (datos: CrearCorreccion) => api.post<Correccion>(`/clientes/${clienteId}/correcciones`, datos),
     // Parcial: no se puede cambiar el tipo; observaciones, tiempo y datos aceptan null para borrarse.
     actualizar: (id: string, datos: ActualizarCorreccion) => api.patch<Correccion>(`/clientes/${clienteId}/correcciones/${id}`, datos),
+    // Quita una corrección ya resuelta (borrado definitivo).
+    eliminar: (id: string) => api.delete(`/clientes/${clienteId}/correcciones/${id}`),
   }
 }

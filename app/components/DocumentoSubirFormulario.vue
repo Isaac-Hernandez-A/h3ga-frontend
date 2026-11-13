@@ -11,7 +11,8 @@ const MIMES_PERMITIDOS = ['application/pdf', 'image/jpeg', 'image/png']
 const docs = useDocumentos()
 const toast = useToast()
 
-const tipoElegido = ref<number | ''>('')
+// Con un solo tipo disponible (por ejemplo desde un documento requerido) ya viene elegido.
+const tipoElegido = ref<number | ''>(props.tipos.length === 1 ? props.tipos[0]!.id : '')
 const archivo = ref<File | null>(null)
 const referencia = ref('')
 const observaciones = ref('')
