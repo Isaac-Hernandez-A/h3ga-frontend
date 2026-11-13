@@ -146,17 +146,59 @@ describe('Diseño con menú lateral', () => {
     })
   })
 
-  it('el botón de cerrar sesión limpia la sesión y manda a /login', async () => {
-    const { wrapper } = await abrirComo('asesor')
-    const sesion = useSessionStore()
-    expect(sesion.token).not.toBeNull()
+  describe('cerrar sesión', () => {
+    const enDialogo = (selector: string) => document.body.querySelector<HTMLElement>(`[role="dialog"] ${selector}`)
 
-    await wrapper.find('button[aria-label="Cerrar sesión"]').trigger('click')
+    beforeEach(() => { document.body.innerHTML = '' })
 
-    expect(sesion.token).toBeNull()
-    expect(sesion.usuario).toBeNull()
-    expect(sessionStorage.getItem('h3ga.sesion')).toBeNull()
-    expect(navigateToMock).toHaveBeenCalledWith('/login')
+    it('el botón de cerrar sesión pide confirmación antes de salir', async () => {
+      const { wrapper } = await abrirComo('asesor')
+      const sesion = useSessionStore()
+      expect(sesion.token).not.toBeNull()
+
+      await wrapper.find('button[aria-label="Cerrar sesión"]').trigger('click')
+      await vi.waitFor(() => expect(enDialogo('button[data-accion="confirmar-cerrar-sesion"]')).not.toBeNull())
+
+      expect(document.body.querySelector('[role="dialog"]')!.textContent).toMatch(/¿quieres cerrar tu sesión\?/i)
+      expect(sesion.token).not.toBeNull()
+      expect(navigateToMock).not.toHaveBeenCalled()
+    })
+
+    it('cancelar deja la sesión abierta', async () => {
+      const { wrapper } = await abrirComo('asesor')
+      const sesion = useSessionStore()
+      await wrapper.find('button[aria-label="Cerrar sesión"]').trigger('click')
+      await vi.waitFor(() => expect(enDialogo('button[data-accion="cancelar-cerrar-sesion"]')).not.toBeNull())
+
+      enDialogo('button[data-accion="cancelar-cerrar-sesion"]')!.click()
+      await vi.waitFor(() => expect(document.body.querySelector('[role="dialog"]')?.getAttribute('data-state') ?? 'closed').toBe('closed'))
+
+      expect(sesion.token).not.toBeNull()
+      expect(sesion.usuario).not.toBeNull()
+      expect(navigateToMock).not.toHaveBeenCalled()
+    })
+
+    it('al confirmar limpia la sesión y manda a /login', async () => {
+      const { wrapper } = await abrirComo('asesor')
+      const sesion = useSessionStore()
+      await wrapper.find('button[aria-label="Cerrar sesión"]').trigger('click')
+      await vi.waitFor(() => expect(enDialogo('button[data-accion="confirmar-cerrar-sesion"]')).not.toBeNull())
+
+      enDialogo('button[data-accion="confirmar-cerrar-sesion"]')!.click()
+      await vi.waitFor(() => expect(sesion.token).toBeNull())
+
+      expect(sesion.usuario).toBeNull()
+      expect(sessionStorage.getItem('h3ga.sesion')).toBeNull()
+      expect(navigateToMock).toHaveBeenCalledWith('/login')
+    })
+
+    it('con el menú contraído el botón también pide confirmación', async () => {
+      const { wrapper } = await abrirComo('asesor')
+      await wrapper.find('header button[aria-label="Contraer menú"]').trigger('click')
+      await wrapper.find('aside button[aria-label="Cerrar sesión"]').trigger('click')
+      await vi.waitFor(() => expect(enDialogo('button[data-accion="confirmar-cerrar-sesion"]')).not.toBeNull())
+      expect(useSessionStore().token).not.toBeNull()
+    })
   })
 
   it('el botón de contraer está en la cabecera, junto al título, y deja solo los iconos con su etiqueta accesible', async () => {

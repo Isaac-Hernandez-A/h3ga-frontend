@@ -4,6 +4,8 @@ import { menuPara, SECCION_SISTEMA, type EntradaMenu } from '~/utils/menu'
 const sesion = useSessionStore()
 const route = useRoute()
 const contraido = ref(false)
+// Cerrar sesión pide confirmación: un clic sin querer no debe sacar a nadie.
+const confirmarSalida = ref(false)
 
 // Por debajo de `lg` (1024 px) el menú se contrae solo para dejar espacio al contenido;
 // al volver a una pantalla ancha se expande. El botón del encabezado sigue funcionando.
@@ -139,7 +141,7 @@ const claseEnlace = (ruta: string) => [
           :class="{ 'justify-center': contraido }"
           aria-label="Cerrar sesión"
           :title="contraido ? 'Cerrar sesión' : undefined"
-          @click="sesion.cerrarSesion()"
+          @click="confirmarSalida = true"
         >
           <UIcon
             name="i-lucide-log-out"
@@ -149,6 +151,33 @@ const claseEnlace = (ruta: string) => [
         </button>
       </div>
     </aside>
+
+    <UModal
+      v-model:open="confirmarSalida"
+      title="¿Quieres cerrar tu sesión?"
+      description="Para volver a entrar tendrás que iniciar sesión de nuevo."
+    >
+      <template #footer>
+        <div class="flex w-full justify-end gap-3">
+          <UButton
+            color="neutral"
+            variant="outline"
+            data-accion="cancelar-cerrar-sesion"
+            @click="confirmarSalida = false"
+          >
+            Cancelar
+          </UButton>
+          <UButton
+            data-accion="confirmar-cerrar-sesion"
+            icon="i-lucide-log-out"
+            class="bg-profundo-500 text-white hover:bg-profundo-600"
+            @click="sesion.cerrarSesion()"
+          >
+            Sí, cerrar sesión
+          </UButton>
+        </div>
+      </template>
+    </UModal>
 
     <div class="flex min-w-0 flex-1 flex-col">
       <header class="flex items-center justify-between gap-4 border-b border-neutral-200 bg-white px-6 py-3">
