@@ -43,24 +43,21 @@ function textoFase(f: FaseCorreccion): string {
 }
 
 const busqueda = ref('')
-const filtroFase = ref('')
 const filtroDocumentos = ref('')
 const orden = ref<'reciente' | 'antiguo'>('reciente')
 const actualizadoDesde = ref('')
 const pagina = ref(1)
 
 // Con documentos: solo F3 y F4 piden documento, y solo cuentan si el cliente requiere esa fase.
-const documentosEn = (c: ClienteCorrecciones, fase: (typeof FASES)[number] | undefined) =>
-  c.fases.filter(f => f.requiere && f.documentos_cargados !== null && (!fase || f.numero_paso === fase.paso)).map(f => f.documentos_cargados!)
+const documentosEn = (c: ClienteCorrecciones) =>
+  c.fases.filter(f => f.requiere && f.documentos_cargados !== null).map(f => f.documentos_cargados!)
 
 const filtrados = computed(() => {
   const texto = normalizarTexto(busqueda.value)
-  const fase = FASES.find(f => f.clave === filtroFase.value)
   const lista = clientes.value.filter((c) => {
     if (actualizadoDesde.value && c.actualizado_el.slice(0, 10) < actualizadoDesde.value) return false
-    if (fase && !faseDe(c, fase.paso)?.requiere) return false
     if (filtroDocumentos.value) {
-      const docs = documentosEn(c, fase)
+      const docs = documentosEn(c)
       if (filtroDocumentos.value === 'falta' ? !docs.some(n => n === 0) : !docs.some(n => n > 0)) return false
     }
     return !texto || normalizarTexto(c.cliente_nombre).includes(texto)
@@ -71,7 +68,7 @@ const filtrados = computed(() => {
 
 const totalPaginas = computed(() => Math.max(1, Math.ceil(filtrados.value.length / TAM_PAGINA)))
 const visibles = computed(() => filtrados.value.slice((pagina.value - 1) * TAM_PAGINA, pagina.value * TAM_PAGINA))
-watch([busqueda, filtroFase, filtroDocumentos, orden, actualizadoDesde], () => { pagina.value = 1 })
+watch([busqueda, filtroDocumentos, orden, actualizadoDesde], () => { pagina.value = 1 })
 
 // Números de página con "…" cuando son muchas: 1 … 4 5 6 … 10.
 const paginas = computed<(number | null)[]>(() => {
@@ -86,10 +83,9 @@ const paginas = computed<(number | null)[]>(() => {
   return lista
 })
 
-const hayFiltros = computed(() => Boolean(busqueda.value || filtroFase.value || filtroDocumentos.value || actualizadoDesde.value || orden.value !== 'reciente'))
+const hayFiltros = computed(() => Boolean(busqueda.value || filtroDocumentos.value || actualizadoDesde.value || orden.value !== 'reciente'))
 function limpiarFiltros() {
   busqueda.value = ''
-  filtroFase.value = ''
   filtroDocumentos.value = ''
   actualizadoDesde.value = ''
   orden.value = 'reciente'
@@ -151,23 +147,6 @@ const claseCampo = 'rounded-lg border border-neutral-300 bg-white px-3 py-2 text
         </option>
         <option value="antiguo">
           Actualizados hace más tiempo
-        </option>
-      </select>
-      <select
-        v-model="filtroFase"
-        name="filtro-fase"
-        aria-label="Filtrar por fase"
-        :class="claseCampo"
-      >
-        <option value="">
-          Todas las fases
-        </option>
-        <option
-          v-for="f in FASES"
-          :key="f.clave"
-          :value="f.clave"
-        >
-          {{ f.titulo }}
         </option>
       </select>
       <select

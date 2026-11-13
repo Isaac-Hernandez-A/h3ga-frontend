@@ -119,22 +119,17 @@ describe('Correcciones: lista de clientes con correcciones', () => {
       expect(nombres(wrapper)[0]).toBe('Héctor Manuel Castillo Pérez')
     })
 
-    it('filtrar por fase deja a los clientes que la requieren', async () => {
+    it('ya no hay filtro por fase (cada fila muestra las tres)', async () => {
       const { wrapper } = await abrir()
-      await wrapper.find('select[name="filtro-fase"]').setValue('f3')
-      expect(nombres(wrapper)).toEqual(['Gabriela Ibarra Fuentes', 'Ricardo Domínguez Lara'])
-      await wrapper.find('select[name="filtro-fase"]').setValue('f2')
-      expect(nombres(wrapper)).toEqual(['Luis Fernando Navarro Beltrán', 'Ricardo Domínguez Lara', 'Héctor Manuel Castillo Pérez'])
+      expect(wrapper.find('select[name="filtro-fase"]').exists()).toBe(false)
     })
 
-    it('filtrar por documentos: los que les falta subir uno, o ya lo tienen (en F3 y F4, o en la fase elegida)', async () => {
+    it('filtrar por documentos: a quienes les falta subir uno (F3 o F4) o ya tienen alguno cargado', async () => {
       const { wrapper } = await abrir()
       await wrapper.find('select[name="filtro-documentos"]').setValue('falta')
       expect(nombres(wrapper)).toEqual(['Gabriela Ibarra Fuentes'])
       await wrapper.find('select[name="filtro-documentos"]').setValue('cargado')
       expect(nombres(wrapper)).toEqual(['Luis Fernando Navarro Beltrán', 'Ricardo Domínguez Lara'])
-      await wrapper.find('select[name="filtro-fase"]').setValue('f4')
-      expect(nombres(wrapper)).toEqual(['Luis Fernando Navarro Beltrán'])
     })
 
     it('"Últimos 90 días" oculta lo actualizado antes y "Limpiar filtros" lo devuelve todo', async () => {
