@@ -481,7 +481,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Reporte operativo semanal o mensual (etapas 0 a 4)
+         * Reporte operativo semanal, mensual o trimestral (etapas 0 a 4)
          * @description Roles permitidos: asesor, supervisor.
          */
         get: operations["ReportesController_generar"];
@@ -501,7 +501,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Reporte operativo semanal o mensual en PDF
+         * Reporte operativo semanal, mensual o trimestral en PDF
          * @description Roles permitidos: asesor, supervisor.
          */
         get: operations["ReportesController_generarPdf"];
@@ -697,6 +697,26 @@ export interface paths {
          * @description Roles permitidos: asesor, auxiliar, supervisor.
          */
         get: operations["EtapasController_listarEstatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/correcciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Clientes del asesor que requieren correcciones (fases F2, F3 y F4)
+         * @description Roles permitidos: asesor.
+         */
+        get: operations["TramitesController_listarTramites"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2090,6 +2110,80 @@ export interface components {
             avance_min: number | null;
             avance_max: number | null;
         };
+        ResumenCorrecciones: {
+            /**
+             * @description Clientes del asesor que requieren al menos una fase (todos, aunque la lista se corte en 500).
+             * @example 12
+             */
+            clientes_con_correcciones: number;
+            /**
+             * @description Fases F3 o F4 con requiere = true y documentos_cargados = 0.
+             * @example 7
+             */
+            documentos_por_subir: number;
+        };
+        FaseCorreccion: {
+            /**
+             * @example 2
+             * @enum {number}
+             */
+            numero_paso: 2 | 3 | 4;
+            /** @example 5d0a8b64-3f0e-4c7e-8d0b-0d7d2b5c9a11 */
+            etapa_tramite_id: string | null;
+            /**
+             * @description null si el cliente no tiene la etapa.
+             * @example 4
+             */
+            estatus_id: number | null;
+            /** @example En proceso asesor */
+            estatus: string | null;
+            /**
+             * @description 0 si el cliente no tiene la etapa.
+             * @example 40
+             */
+            avance_porcentaje: number;
+            /**
+             * @description AAAA-MM-DD
+             * @example 2026-12-01
+             */
+            fecha_compromiso: string | null;
+            /** @example Pedir el acta de nacimiento. */
+            accion_a_realizar: string | null;
+            /**
+             * @description F2: tiene alguna corrección que no es de unificación de NSS. F3: tiene una de unificación de NSS. F4: su diagnóstico especializado (F1) tiene análisis de recuperación de semanas con aplica «si» o «requiere_mas_evidencia».
+             * @example true
+             */
+            requiere: boolean;
+            /**
+             * @description Solo F2: cuántas correcciones tiene (sin contar las de unificación de NSS). null en F3 y F4.
+             * @example 2
+             */
+            correcciones: number | null;
+            /**
+             * @description F3: documentos cargados de «Certificación de regularización… (IMSS)». F4: de «Constancia de Aclaración de Semanas Cotizadas (IMSS)» y «Solicitud de Reintegro de Recursos (AFORE)». null en F2.
+             * @example 1
+             */
+            documentos_cargados: number | null;
+        };
+        ClienteCorrecciones: {
+            /** @example f9fc07b8-677e-4e34-9ee4-7e6b43c605e3 */
+            cliente_id: string;
+            /** @example Rosa Pérez Ficticia */
+            cliente_nombre: string;
+            /**
+             * Format: date-time
+             * @description Mayor actualizado_el entre las etapas 2, 3 y 4. Sin etapas: la fecha de ingreso del cliente (00:00 de Cancún).
+             * @example 2026-11-10T15:00:00.000Z
+             */
+            actualizado_el: string;
+            /** @description Siempre las 3 fases, en orden 2, 3, 4. */
+            fases: components["schemas"]["FaseCorreccion"][];
+        };
+        CorreccionesListadoRespuesta: {
+            resumen: components["schemas"]["ResumenCorrecciones"];
+            /** @description Solo clientes con al menos una fase requerida, por actualizado_el descendente; máximo 500. */
+            clientes: components["schemas"]["ClienteCorrecciones"][];
+        };
         CorreccionCliente: {
             id: string;
             cliente_id: string;
@@ -2788,6 +2882,28 @@ export interface components {
             /** @example 1 */
             clientes_pensionados: number;
         };
+        AvanceClienteEtapa: {
+            /** @example 1 */
+            numero_paso: number;
+            /**
+             * @description avance_porcentaje de la etapa (0 si el cliente no la tiene).
+             * @example 40
+             */
+            avance_porcentaje: number;
+            /**
+             * @description estatus_tramite.id de la etapa; null si el cliente no tiene esa etapa.
+             * @example 4
+             */
+            estatus_id: number | null;
+        };
+        AvanceCliente: {
+            /** @example 16699b14-2d83-4fab-9d9d-1f4f16131f61 */
+            cliente_id: string;
+            /** @example Rosa Pérez Ficticia */
+            cliente_nombre: string;
+            /** @description Siempre las 16 etapas (0 a 15), en orden. */
+            etapas: components["schemas"]["AvanceClienteEtapa"][];
+        };
         DashboardRespuesta: {
             /**
              * @description Hoy en America/Cancun (AAAA-MM-DD).
@@ -2816,6 +2932,13 @@ export interface components {
             clientes_detenidos: components["schemas"]["ClienteDetenido"][];
             /** @description Solo el supervisor (todos los asesores con clientes); null para los demás. */
             carga_por_asesor: components["schemas"]["CargaPorAsesor"][] | null;
+            /** @description Solo el asesor: una fila por cliente activo (por cliente_nombre), con las 16 etapas y su avance. Tope de 200 clientes; no lo limita ?limite. Null para el auxiliar y el supervisor. */
+            avance_por_cliente: components["schemas"]["AvanceCliente"][] | null;
+            /**
+             * @description Total real de clientes activos del asesor (puede ser mayor que 200). Null para los demás.
+             * @example 42
+             */
+            total_avance_por_cliente: number | null;
         };
         ImportarExcelDto: {
             /**
@@ -3965,7 +4088,7 @@ export interface operations {
     ReportesController_generar: {
         parameters: {
             query: {
-                periodo: "semanal" | "mensual";
+                periodo: "semanal" | "mensual" | "trimestral";
                 fecha?: string;
             };
             header?: never;
@@ -4001,7 +4124,7 @@ export interface operations {
     ReportesController_generarPdf: {
         parameters: {
             query: {
-                periodo: "semanal" | "mensual";
+                periodo: "semanal" | "mensual" | "trimestral";
                 fecha?: string;
             };
             header?: never;
@@ -4465,6 +4588,47 @@ export interface operations {
                 content?: never;
             };
             /** @description El rol del usuario no tiene permiso en esta ruta. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TramitesController_listarTramites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CorreccionesListadoRespuesta"];
+                };
+            };
+            /**
+             * @description Falta el token o no es válido.
+             *
+             *     Token ausente, vencido o inválido.
+             */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /**
+             * @description Solo el asesor puede consultar este listado.
+             *
+             *     El rol del usuario no tiene permiso en esta ruta.
+             */
             403: {
                 headers: {
                     [name: string]: unknown;

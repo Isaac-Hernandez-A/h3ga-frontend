@@ -41,9 +41,18 @@ const base = {
   total_documentos_pendientes: 2,
   clientes_detenidos: [detenido('José Ángel Núñez', 'Ana Pérez', 'Corrección de datos personales', 'Detenido', 1)],
   carga_por_asesor: null,
+  // Solo el Asesor recibe el avance de cada cliente en las 16 etapas.
+  avance_por_cliente: null,
+  total_avance_por_cliente: null,
 }
+const etapasAvance = (cambios: Record<number, [number, number | null]>) =>
+  NOMBRES.map((_, numero_paso) => ({ numero_paso, avance_porcentaje: cambios[numero_paso]?.[0] ?? 10, estatus_id: cambios[numero_paso] ? cambios[numero_paso]![1] : 2 }))
+const AVANCE = [
+  { cliente_id: 'c-1', cliente_nombre: 'José Ángel Núñez', etapas: etapasAvance({ 0: [100, 6], 1: [80, 4], 2: [30, 9] }) },
+  { cliente_id: 'c-2', cliente_nombre: 'María Elena Rodríguez Salas', etapas: etapasAvance({ 0: [100, 6], 15: [0, null] }) },
+]
 const RESPUESTAS: Record<Rol, unknown> = {
-  asesor: base,
+  asesor: { ...base, avance_por_cliente: AVANCE, total_avance_por_cliente: 2 },
   auxiliar: base,
   supervisor: {
     ...base,
@@ -78,6 +87,7 @@ function api(rol: Rol, falla = false, respuesta: unknown = RESPUESTAS[rol]) {
 async function abrir(rol: Rol, falla = false, respuesta?: unknown) {
   setActivePinia(useNuxtApp().$pinia as Pinia)
   const fetchMock = api(rol, falla, respuesta ?? RESPUESTAS[rol])
+  useAvisosStore().pendientes = 0 // el contador de avisos es compartido: cada prueba parte de cero
   await useSessionStore().iniciarSesion('ana@ejemplo.com', 'secreta123')
   const wrapper = await mountSuspended(InicioPage)
   await vi.waitFor(() => expect(wrapper.text()).not.toMatch(/cargando el dashboard/i), { timeout: 4000 })
@@ -132,12 +142,29 @@ describe('Dashboard de Inicio', () => {
       expect(wrapper.find('[data-seccion="detenidos"]').text()).not.toMatch(/asesor/i)
     })
 
-    it('junto a los documentos pendientes muestra la dona de documentos por estatus', async () => {
+    it('junto a los documentos pendientes muestra "Lo que tienes pendiente", con un renglón por cada pendiente', async () => {
       const { wrapper } = await abrir('asesor')
-      const dona = wrapper.find('[data-dona="documentos"]')
-      expect(dona.exists()).toBe(true)
-      expect(dona.text()).toContain('2')
-      expect(dona.findAll('[data-leyenda]').map(l => l.text())[1]).toContain('Por confirmar')
+      useAvisosStore().pendientes = 3
+      await flushPromises()
+      expect(wrapper.find('[data-dona="documentos"]').exists()).toBe(false)
+      const s = wrapper.find('[data-seccion="pendientes"]')
+      expect(s.exists()).toBe(true)
+      const cantidad = (k: string) => s.find(`[data-pendiente="${k}"] [data-cantidad]`).text()
+      expect(cantidad('documentos')).toBe('1') // solo "Por confirmar"
+      expect(cantidad('vencidos')).toBe('0')
+      expect(cantidad('proximas')).toBe('1')
+      expect(cantidad('detenidos')).toBe('1')
+      expect(cantidad('avisos')).toBe('3')
+    })
+
+    it('cada renglón dice si hay algo pendiente o si va al corriente', async () => {
+      const conVencida = { ...base, acciones_del_mes: [...base.acciones_del_mes, accion('José Ángel Núñez', 'Ana Pérez', 2, 'Corregir CURP', 'vencida', '2026-11-01')] }
+      const { wrapper } = await abrir('asesor', false, conVencida)
+      const s = wrapper.find('[data-seccion="pendientes"]')
+      expect(s.find('[data-pendiente="vencidos"] [data-cantidad]').text()).toBe('1')
+      expect(s.find('[data-pendiente="vencidos"]').attributes('data-estado')).toBe('pendiente')
+      expect(s.find('[data-pendiente="avisos"]').attributes('data-estado')).toBe('al-corriente')
+      expect(s.find('[data-pendiente="avisos"]').text()).toMatch(/al corriente/i)
     })
 
     it('acciones y fechas próximas del mes, con cliente, fecha, etapa, acción y estado', async () => {
@@ -173,6 +200,46 @@ describe('Dashboard de Inicio', () => {
       expect(f[0]!.find('a[data-accion="revisar"]').attributes('href')).toBe('/clientes/c-María Elena Rodríguez Salas/archivos')
     })
 
+    it('tabla de avance: una fila por cliente y una columna por cada etapa (0 a 15) con su porcentaje', async () => {
+      const { wrapper } = await abrir('asesor')
+      const s = wrapper.find('[data-seccion="matriz"]')
+      expect(s.findAll('thead th').map(th => th.text()).slice(0, 4)).toEqual(['Cliente', '0', '1', '2'])
+      expect(s.findAll('thead th')).toHaveLength(17)
+      const f = filas(wrapper, 'matriz', 'data-cliente-fila')
+      expect(f.map(x => x.find('[data-nombre]').text())).toEqual(['José Ángel Núñez', 'María Elena Rodríguez Salas'])
+      const celdas = f[0]!.findAll('[data-celda]')
+      expect(celdas).toHaveLength(16)
+      expect(celdas.slice(0, 4).map(c => c.text())).toEqual(['100%', '80%', '30%', '10%'])
+    })
+
+    it('la tabla de avance pinta cada celda según el estatus de la etapa y nombra las etapas en el encabezado', async () => {
+      const { wrapper } = await abrir('asesor')
+      const celdas = filas(wrapper, 'matriz', 'data-cliente-fila')[0]!.findAll('[data-celda]')
+      expect(celdas.map(c => c.attributes('data-estatus')).slice(0, 4)).toEqual(['finalizado', 'en-proceso', 'detenido', 'por-iniciar'])
+      expect(wrapper.findAll('[data-seccion="matriz"] thead th')[2]!.attributes('title')).toBe('Diagnóstico especializado')
+      expect(celdas[0]!.attributes('title')).toBe('Diagnóstico inicial: 100%')
+    })
+
+    it('si el backend recortó la lista de clientes lo avisa; sin estatus (null) la celda queda neutra', async () => {
+      const recortada = { ...RESPUESTAS.asesor as object, total_avance_por_cliente: 250 }
+      const { wrapper } = await abrir('asesor', false, recortada)
+      expect(wrapper.find('[data-seccion="matriz"]').text()).toMatch(/2 de 250 clientes/)
+      const ultima = filas(wrapper, 'matriz', 'data-cliente-fila')[1]!.findAll('[data-celda]')[15]!
+      expect(ultima.attributes('data-estatus')).toBe('sin-estatus')
+    })
+
+    it('el Auxiliar y el Supervisor no ven la tabla de avance por cliente', async () => {
+      for (const rol of ['auxiliar', 'supervisor'] as Rol[]) {
+        const { wrapper } = await abrir(rol)
+        expect(wrapper.find('[data-seccion="matriz"]').exists(), rol).toBe(false)
+      }
+    })
+
+    it('el Supervisor no ve el panel de pendientes', async () => {
+      const { wrapper } = await abrir('supervisor')
+      expect(wrapper.find('[data-seccion="pendientes"]').exists()).toBe(false)
+    })
+
     it('no muestra las secciones de carga por asesor', async () => {
       const { wrapper } = await abrir('asesor')
       for (const s of ['carga-grafica', 'carga-tabla']) expect(wrapper.find(`[data-seccion="${s}"]`).exists(), s).toBe(false)
@@ -205,16 +272,12 @@ describe('Dashboard de Inicio', () => {
       expect(f.map(x => x.find('[data-subido-por]').text())).toEqual(['Carlos Montes', 'Tú'])
     })
 
-    it('documentos por estatus en una dona con conteo y porcentaje', async () => {
+    it('en lugar de la dona muestra "Lo que tienes pendiente"; los documentos incluyen los con observaciones', async () => {
       const { wrapper } = await abrir('auxiliar')
-      const dona = wrapper.find('[data-dona="documentos"]')
-      expect(dona.text()).toContain('2')
-      const leyenda = dona.findAll('[data-leyenda]').map(l => l.text())
-      expect(leyenda).toHaveLength(3)
-      expect(leyenda[0]).toContain('Aprobados')
-      expect(leyenda[1]).toContain('Por confirmar')
-      expect(leyenda[1]).toContain('50%')
-      expect(leyenda[2]).toContain('Con observaciones')
+      expect(wrapper.find('[data-dona="documentos"]').exists()).toBe(false)
+      const s = wrapper.find('[data-seccion="pendientes"]')
+      expect(s.find('[data-pendiente="documentos"] [data-cantidad]').text()).toBe('2') // por confirmar y con observaciones
+      expect(s.find('[data-pendiente="detenidos"] [data-cantidad]').text()).toBe('1')
     })
 
     it('clientes con avance detenido: etapa, estatus, última actividad y días sin actividad', async () => {

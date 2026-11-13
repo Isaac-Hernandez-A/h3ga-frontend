@@ -37,3 +37,27 @@ export function iniciales(nombre: string): string {
   const partes = nombre.trim().split(/\s+/)
   return `${partes[0]?.charAt(0) ?? ''}${partes.length > 1 ? partes.at(-1)!.charAt(0) : ''}`.toUpperCase()
 }
+
+// Estatus de una etapa (id del catálogo) para pintar su celda en la tabla de avance por cliente; null = sin etapa.
+const ESTATUS_CELDA: Record<number, { clave: string, clase: string }> = {
+  1: { clave: 'no-aplica', clase: 'bg-neutral-50 text-neutral-400' },
+  2: { clave: 'por-iniciar', clase: 'bg-neutral-100 text-neutral-600' },
+  3: { clave: 'en-proceso', clase: 'bg-marca-100 text-marca-800' },
+  4: { clave: 'en-proceso', clase: 'bg-marca-100 text-marca-800' },
+  5: { clave: 'en-proceso', clase: 'bg-marca-100 text-marca-800' },
+  6: { clave: 'finalizado', clase: 'bg-green-100 text-green-800' },
+  7: { clave: 'bloqueado', clase: 'bg-amber-100 text-amber-800' },
+  8: { clave: 'cancelado', clase: 'bg-neutral-200 text-neutral-600' },
+  9: { clave: 'detenido', clase: 'bg-red-100 text-red-700' },
+}
+const SIN_ESTATUS = { clave: 'sin-estatus', clase: 'bg-neutral-50 text-neutral-400' }
+export const celdaEstatus = (estatusId: number | null) => (estatusId === null ? SIN_ESTATUS : ESTATUS_CELDA[estatusId] ?? SIN_ESTATUS)
+
+// Leyenda de la tabla de avance: un color por tipo de estatus.
+export const LEYENDA_ESTATUS = [
+  { nombre: 'Finalizado', estatusId: 6 },
+  { nombre: 'En proceso', estatusId: 4 },
+  { nombre: 'Por iniciar', estatusId: 2 },
+  { nombre: 'Bloqueado', estatusId: 7 },
+  { nombre: 'Detenido', estatusId: 9 },
+]

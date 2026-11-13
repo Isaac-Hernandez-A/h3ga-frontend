@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { DocumentoPendiente } from '~/types/dashboard'
-import { fechaLarga, iniciales, porGrupo, TOTAL_ETAPAS, textoVencimiento, type EstadoAccion } from '~/utils/dashboard'
+import { celdaEstatus, fechaLarga, iniciales, LEYENDA_ESTATUS, porGrupo, TOTAL_ETAPAS, textoVencimiento, type EstadoAccion } from '~/utils/dashboard'
 import { fechaLocalISO, formatearFechaCorta, hoyISO } from '~/utils/fechas'
 
 definePageMeta({ titulo: 'Dashboard' })
@@ -44,13 +44,21 @@ const barrasEtapas = computed(() => Array.from({ length: TOTAL_ETAPAS }, (_, p) 
 }))
 const dona = computed(() => porGrupo(barrasEtapas.value.map(b => b.valor)).map(g => ({ nombre: g.nombre, valor: g.valor, color: g.color })))
 
-const estatusDocs = computed(() => datos.value?.documentos_por_estatus ?? { si: 0, por_confirmar: 0, no: 0 })
-const donaDocs = computed(() => [
-  { nombre: 'Aprobados', valor: estatusDocs.value.si, color: '#16a34a' },
-  { nombre: 'Por confirmar', valor: estatusDocs.value.por_confirmar, color: '#e5a50a' },
-  { nombre: 'Con observaciones', valor: estatusDocs.value.no, color: '#e11d48' },
+// Tabla de avance por cliente (solo Asesor): el backend manda las 16 etapas de cada cliente activo.
+const avanceClientes = computed(() => datos.value?.avance_por_cliente ?? [])
+const totalAvanceClientes = computed(() => datos.value?.total_avance_por_cliente ?? 0)
+const nombreEtapa = (paso: number) => etapas.value.find(e => e.numero_paso === paso)?.nombre ?? `Etapa ${paso}`
+
+// "Lo que tienes pendiente": un renglón por cada cosa que pide atención (Asesor y Auxiliar).
+const avisosPendientes = computed(() => useAvisosStore().pendientes)
+const vencidos = computed(() => acciones.value.filter(a => a.estado === 'vencida').length)
+const pendientesPanel = computed(() => [
+  { clave: 'documentos', icono: 'i-lucide-file-text', texto: esAuxiliar.value ? 'Documentos por revisar o con observaciones' : 'Documentos por confirmar', cantidad: totalPendientes.value, ayuda: 'Esperan tu revisión' },
+  { clave: 'vencidos', icono: 'i-lucide-alarm-clock-off', texto: 'Compromisos vencidos', cantidad: vencidos.value, ayuda: 'Su fecha compromiso ya pasó' },
+  { clave: 'proximas', icono: 'i-lucide-calendar-days', texto: 'Acciones próximas del mes', cantidad: accionesProximas.value, ayuda: 'Con fecha compromiso por llegar' },
+  { clave: 'detenidos', icono: 'i-lucide-clock', texto: 'Clientes con avance detenido', cantidad: detenidosTotal.value, ayuda: 'Etapa detenida o 15 días sin actividad' },
+  { clave: 'avisos', icono: 'i-lucide-bell', texto: 'Avisos sin atender', cantidad: avisosPendientes.value, ayuda: 'Te avisan 2 días antes de cada compromiso', enlace: '/avisos' },
 ])
-const totalDocs = computed(() => estatusDocs.value.si + estatusDocs.value.por_confirmar + estatusDocs.value.no)
 
 const claseEstado = (estado: EstadoAccion) => estado === 'completada' ? 'border-green-600 text-green-700' : estado === 'vencida' ? 'border-red-500 text-red-600' : 'border-amber-500 text-amber-700'
 const subidoPor = (d: DocumentoPendiente) => d.subido_por_id === sesion.usuario?.id ? 'Tú' : d.subido_por_nombre ?? '—'
@@ -368,6 +376,77 @@ const claseCabecera = 'border-b border-neutral-200 text-neutral-600'
         </div>
       </div>
 
+      <!-- Avance de cada cliente en las 16 etapas (Asesor) -->
+      <article
+        v-if="esAsesor && avanceClientes.length > 0"
+        data-seccion="matriz"
+        :class="claseSeccion"
+      >
+        <h3 class="font-display text-lg font-semibold text-profundo-700">
+          Avance de mis clientes por etapa
+        </h3>
+        <p class="mb-3 text-sm text-neutral-600">
+          Porcentaje de avance de cada cliente en las 16 etapas<template v-if="totalAvanceClientes > avanceClientes.length"> (se muestran {{ avanceClientes.length }} de {{ totalAvanceClientes }} clientes)</template>
+        </p>
+        <ul class="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-600">
+          <li
+            v-for="l in LEYENDA_ESTATUS"
+            :key="l.nombre"
+            class="flex items-center gap-1.5"
+          >
+            <span
+              class="inline-block size-3 rounded"
+              :class="celdaEstatus(l.estatusId).clase"
+            />{{ l.nombre }}
+          </li>
+        </ul>
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[60rem] border-separate border-spacing-y-1 text-center text-xs">
+            <thead class="text-neutral-600">
+              <tr>
+                <th class="sticky left-0 z-10 bg-white px-3 py-2 text-left text-sm font-medium">
+                  Cliente
+                </th>
+                <th
+                  v-for="p in 16"
+                  :key="p"
+                  :title="nombreEtapa(p - 1)"
+                  class="px-1 py-2 font-medium"
+                >
+                  {{ p - 1 }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="c in avanceClientes"
+                :key="c.cliente_id"
+                data-cliente-fila
+              >
+                <td class="sticky left-0 z-10 bg-white px-3 py-1 text-left text-sm">
+                  <NuxtLink
+                    :to="`/clientes/${c.cliente_id}`"
+                    data-nombre
+                    class="font-medium text-profundo-900 hover:underline"
+                  >{{ c.cliente_nombre }}</NuxtLink>
+                </td>
+                <td
+                  v-for="e in c.etapas"
+                  :key="e.numero_paso"
+                  data-celda
+                  :data-estatus="celdaEstatus(e.estatus_id).clave"
+                  :title="`${nombreEtapa(e.numero_paso)}: ${e.avance_porcentaje}%`"
+                  class="rounded px-1 py-1.5 font-medium"
+                  :class="celdaEstatus(e.estatus_id).clase"
+                >
+                  {{ e.avance_porcentaje }}%
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
       <!-- Documentos pendientes (y por estatus para el Auxiliar) -->
       <div
         v-if="!esSupervisor"
@@ -470,21 +549,47 @@ const claseCabecera = 'border-b border-neutral-200 text-neutral-600'
           </div>
         </article>
         <article
-          data-seccion="documentos-estatus"
+          data-seccion="pendientes"
           :class="claseSeccion"
         >
           <h3 class="font-display text-lg font-semibold text-profundo-700">
-            Documentos por estatus
+            Lo que tienes pendiente
           </h3>
           <p class="mb-4 text-sm text-neutral-600">
-            Documentos de clientes activos
+            Lo que pide tu atención hoy
           </p>
-          <DonaGrafica
-            data-dona="documentos"
-            :segmentos="donaDocs"
-            :total="totalDocs"
-            etiqueta="Documentos"
-          />
+          <ul class="space-y-2">
+            <li
+              v-for="p in pendientesPanel"
+              :key="p.clave"
+              :data-pendiente="p.clave"
+              :data-estado="p.cantidad > 0 ? 'pendiente' : 'al-corriente'"
+              class="flex items-center gap-3 rounded-xl border px-3 py-2.5"
+              :class="p.cantidad > 0 ? 'border-amber-200 bg-amber-50' : 'border-green-200 bg-green-50'"
+            >
+              <UIcon
+                :name="p.icono"
+                class="size-5 shrink-0"
+                :class="p.cantidad > 0 ? 'text-amber-700' : 'text-green-700'"
+              />
+              <span class="min-w-0 flex-1 text-sm">
+                <NuxtLink
+                  v-if="p.enlace"
+                  :to="p.enlace"
+                  class="font-medium text-profundo-900 hover:underline"
+                >{{ p.texto }}</NuxtLink>
+                <span
+                  v-else
+                  class="font-medium text-profundo-900"
+                >{{ p.texto }}</span>
+                <span class="block text-xs text-neutral-600">{{ p.cantidad > 0 ? p.ayuda : 'Al corriente' }}</span>
+              </span>
+              <span
+                data-cantidad
+                class="font-display text-2xl font-semibold text-profundo-900"
+              >{{ p.cantidad }}</span>
+            </li>
+          </ul>
         </article>
       </div>
 
