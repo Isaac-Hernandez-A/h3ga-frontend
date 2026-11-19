@@ -21,3 +21,9 @@ Thumbs.db
 0.0.0.0
 playwright-report
 test-results
+
+# Excel y salidas del ETL con datos de clientes: nunca al repositorio
+*.xlsx
+*.xls
+etl-salida/
+docs/capturas/Claude outputs/
